@@ -1,0 +1,21 @@
+{
+  "name": "conundrum-r15-designer",
+  "productName": "R15 Template Designer",
+  "version": "1.0.0",
+  "description": "Roblox R15 Shirt Editor / Template Designer",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "roblox",
+    "shirt",
+    "editor",
+    "r15"
+  ],
+  "author": "Conundrum by Este",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^41.1.0"
+  }
+}

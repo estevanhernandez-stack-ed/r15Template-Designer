@@ -1,0 +1,2684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roblox R15 Shirt Editor | Conundrum by Este</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0d0d1a; color:#e0e0e0; font-family:'Segoe UI',system-ui,sans-serif; overflow:hidden; display:flex; flex-direction:column; height:100vh; }
+
+  header { background:linear-gradient(135deg,#1a1a2e,#16213e); padding:8px 24px; display:flex; align-items:center; gap:16px; border-bottom:1px solid #333; flex-shrink:0; }
+  header h1 { font-size:18px; background:linear-gradient(90deg,#e040fb,#00e5ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  header span { font-size:11px; color:#888; }
+
+  /* RIBBON */
+  .ribbon { flex-shrink:0; background:#111827; border-bottom:1px solid #444; }
+  .ribbon-tabs { display:flex; background:#0a0a14; padding:0 8px; border-bottom:1px solid #333; }
+  .ribbon-tab { padding:4px 16px; font-size:11px; font-weight:600; color:#777; cursor:pointer; border:none; background:none; text-transform:uppercase; letter-spacing:.5px; position:relative; transition:all .15s; }
+  .ribbon-tab:hover { color:#ccc; }
+  .ribbon-tab.active { color:#e040fb; background:#111827; }
+  .ribbon-tab.active::after { content:''; position:absolute; bottom:-1px; left:0; right:0; height:2px; background:#e040fb; }
+  .ribbon-pane { display:none; padding:6px 12px; }
+  .ribbon-pane.active { display:flex; gap:0; align-items:stretch; overflow-x:auto; }
+  .ribbon-group { display:flex; flex-direction:column; padding:0 10px; border-right:1px solid #1e1e3a; flex-shrink:0; }
+  .ribbon-group:last-child { border-right:none; }
+  .ribbon-group-items { display:flex; gap:3px; flex-wrap:wrap; align-items:center; flex:1; }
+  .ribbon-group-items.vert { flex-direction:column; align-items:stretch; }
+  .ribbon-group-label { font-size:8px; color:#555; text-transform:uppercase; letter-spacing:.5px; text-align:center; padding-top:3px; white-space:nowrap; }
+  .rbtn { padding:3px 8px; font-size:10px; background:#1a1a2e; border:1px solid #333; color:#ccc; border-radius:4px; cursor:pointer; white-space:nowrap; transition:all .12s; }
+  .rbtn:hover { border-color:#e040fb; color:#e040fb; }
+  .rbtn.active { border-color:#e040fb; background:#1e1040; color:#e040fb; }
+
+  .app { display:flex; flex:1; overflow:hidden; }
+
+  /* LEFT PANEL */
+  .panel { width:280px; background:#111827; border-right:1px solid #333; overflow-y:auto; padding:12px; flex-shrink:0; }
+  .panel h3 { font-size:13px; color:#888; text-transform:uppercase; letter-spacing:1px; margin:12px 0 8px; }
+  .panel h3:first-child { margin-top:0; }
+
+  .drop-zone { border:2px dashed #444; border-radius:8px; padding:24px 12px; text-align:center; color:#666; font-size:13px; cursor:pointer; transition:all .2s; margin-bottom:8px; }
+  .drop-zone:hover, .drop-zone.dragover { border-color:#e040fb; color:#e040fb; background:rgba(224,64,251,.05); }
+
+  .layer-list { display:flex; flex-direction:column; gap:4px; min-height:20px; }
+  .layer-item { display:flex; align-items:center; gap:8px; padding:6px 8px; background:#1a1a2e; border-radius:6px; cursor:grab; font-size:12px; border:1px solid transparent; transition:all .15s; user-select:none; }
+  .layer-item:active { cursor:grabbing; }
+  .layer-item.selected { border-color:#e040fb; background:#1e1040; }
+  .layer-item.drag-over-top { border-top:2px solid #e040fb; }
+  .layer-item.drag-over-bottom { border-bottom:2px solid #e040fb; }
+  .layer-item.dragging-layer { opacity:0.4; }
+  .layer-item img { width:32px; height:32px; object-fit:contain; border-radius:4px; background:#000; pointer-events:none; }
+  .layer-item .name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; pointer-events:none; }
+  .layer-item .layer-btns { display:flex; gap:2px; }
+  .layer-item .layer-btns button { background:none; border:none; cursor:pointer; font-size:12px; padding:2px 4px; opacity:0.6; transition:opacity .15s; }
+  .layer-item .layer-btns button:hover { opacity:1; }
+  .layer-item .layer-btns .btn-dupe { color:#00e5ff; }
+  .layer-item .layer-btns .btn-vis { color:#aaa; font-size:11px; }
+  .layer-item .layer-btns .btn-vis.hidden-layer { color:#555; }
+  .layer-item .layer-btns .btn-del { color:#f44; }
+  .layer-item .layer-btns .btn-del:hover { color:#ff6b6b; }
+
+  .controls label { display:block; font-size:11px; color:#999; margin:6px 0 2px; }
+  .controls input[type=range] { width:100%; accent-color:#e040fb; }
+  .controls input[type=color] { width:40px; height:28px; border:none; background:none; cursor:pointer; }
+  .controls select, .controls input[type=text], .controls input[type=number] { width:100%; background:#1a1a2e; border:1px solid #333; color:#e0e0e0; padding:4px 8px; border-radius:4px; font-size:12px; }
+
+  .row { display:flex; gap:8px; align-items:center; }
+  .row > * { flex:1; }
+
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:8px 16px; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; transition:all .15s; }
+  .btn-primary { background:linear-gradient(135deg,#e040fb,#7c4dff); color:#fff; }
+  .btn-primary:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(224,64,251,.3); }
+  .btn-secondary { background:#1a1a2e; color:#e0e0e0; border:1px solid #444; }
+  .btn-secondary:hover { border-color:#e040fb; }
+  .btn-sm { padding:4px 10px; font-size:11px; }
+  .btn-active { border-color:#e040fb !important; background:#1e1040 !important; color:#e040fb !important; }
+
+  .color-swatches { display:flex; flex-wrap:wrap; gap:4px; margin:4px 0; }
+  .swatch { width:24px; height:24px; border-radius:4px; cursor:pointer; border:2px solid transparent; transition:all .15s; }
+  .swatch:hover, .swatch.active { border-color:#fff; transform:scale(1.15); }
+
+  /* CENTER CANVAS */
+  .canvas-area { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; overflow:hidden; background:#0a0a14; }
+  .canvas-wrap { position:relative; border:1px solid #333; background:repeating-conic-gradient(#1a1a2e 0% 25%, #111 0% 50%) 0 0/16px 16px; }
+  canvas { display:block; cursor:crosshair; }
+
+  /* RIGHT PANEL */
+  .rpanel { width:240px; background:#111827; border-left:1px solid #333; overflow-y:auto; padding:12px; flex-shrink:0; }
+
+  .region-grid { display:grid; gap:2px; }
+  .region-btn { padding:3px 4px; font-size:9px; background:#1a1a2e; border:1px solid #333; color:#aaa; border-radius:3px; cursor:pointer; text-align:center; white-space:nowrap; overflow:hidden; }
+  .region-btn:hover { border-color:#e040fb; color:#e040fb; }
+  .region-btn.filled { background:#1e1040; border-color:#7c4dff; color:#e0e0e0; }
+
+  .preset-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+  .preset-btn { padding:6px; font-size:11px; background:#1a1a2e; border:1px solid #333; color:#ccc; border-radius:4px; cursor:pointer; text-align:center; }
+  .preset-btn:hover { border-color:#00e5ff; color:#00e5ff; }
+
+  .zoom-controls { display:flex; align-items:center; gap:8px; position:absolute; bottom:12px; right:12px; background:rgba(0,0,0,.7); padding:4px 8px; border-radius:20px; }
+  .zoom-controls button { background:none; border:none; color:#fff; font-size:16px; cursor:pointer; padding:2px 6px; }
+  .zoom-controls span { font-size:11px; color:#aaa; min-width:36px; text-align:center; }
+
+  /* FREE-FORM TOOLS PANEL */
+  .draw-tools { display:flex; flex-wrap:wrap; gap:4px; margin:4px 0; }
+  .draw-tool-btn { padding:4px 8px; font-size:11px; background:#1a1a2e; border:1px solid #333; color:#ccc; border-radius:4px; cursor:pointer; }
+  .draw-tool-btn:hover { border-color:#00e5ff; color:#00e5ff; }
+  .draw-tool-btn.active { border-color:#e040fb; background:#1e1040; color:#e040fb; }
+
+  /* Word Art Generator */
+  .wordart-panel { margin-top:4px; }
+  .wordart-panel input, .wordart-panel select, .wordart-panel textarea { width:100%; background:#1a1a2e; border:1px solid #333; color:#e0e0e0; padding:4px 8px; border-radius:4px; font-size:12px; margin-bottom:4px; }
+  .wordart-panel textarea { resize:vertical; min-height:36px; font-family:inherit; }
+  .wordart-style-grid { display:grid; grid-template-columns:1fr 1fr; gap:4px; margin:4px 0; }
+  .wordart-style-btn { padding:6px 4px; font-size:10px; background:#1a1a2e; border:1px solid #333; color:#ccc; border-radius:4px; cursor:pointer; text-align:center; transition:all .15s; }
+  .wordart-style-btn:hover { border-color:#e040fb; color:#e040fb; }
+  .wordart-style-btn.active { border-color:#e040fb; background:#1e1040; color:#e040fb; }
+  .wordart-preview { background:#000; border:1px solid #333; border-radius:4px; margin:6px 0; min-height:60px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .wordart-preview canvas { max-width:100%; max-height:80px; }
+
+  /* Tooltip */
+  .info { font-size:10px; color:#666; margin:4px 0; }
+
+  /* Resizable asset browser */
+  .asset-resize-handle {
+    width:100%; height:8px; cursor:ns-resize; background:transparent;
+    display:flex; align-items:center; justify-content:center; margin:2px 0;
+    user-select:none; -webkit-user-select:none;
+  }
+  .asset-resize-handle::after {
+    content:''; display:block; width:40px; height:3px; border-radius:2px;
+    background:#444; transition:background .15s;
+  }
+  .asset-resize-handle:hover::after, .asset-resize-handle:active::after { background:#e040fb; }
+
+  @media (max-width: 900px) { .panel, .rpanel { width:200px; } }
+</style>
+<!-- Google Fonts for Word Art -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Dancing+Script:wght@700&family=Great+Vibes&family=Pacifico&family=Creepster&family=Poppins:wght@700;900&family=Lato:wght@900&family=Bangers&family=Permanent+Marker&family=Bungee+Shade&family=Rubik+Mono+One&family=Press+Start+2P&family=Righteous&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header>
+  <h1>Roblox R15 Shirt Editor</h1>
+  <span>Conundrum by Este | 626Labs | v3.0</span>
+</header>
+
+<!-- ═══════════ RIBBON ═══════════ -->
+<div class="ribbon">
+  <div class="ribbon-tabs">
+    <button class="ribbon-tab active" data-tab="home">Home</button>
+    <button class="ribbon-tab" data-tab="layout">Layout</button>
+    <button class="ribbon-tab" data-tab="details">Details</button>
+    <button class="ribbon-tab" data-tab="text">Text</button>
+  </div>
+
+  <!-- HOME TAB -->
+  <div class="ribbon-pane active" data-tab="home">
+    <div class="ribbon-group" style="padding:0 14px;">
+      <div class="ribbon-group-items vert" style="align-items:center;gap:4px;">
+        <button id="btnModeToggle" class="btn btn-sm" style="font-size:13px;font-weight:700;padding:6px 18px;background:linear-gradient(135deg,#e040fb,#7c4dff);color:#fff;border:none;border-radius:6px;cursor:pointer;letter-spacing:.5px;min-width:80px;">SHIRT</button>
+        <select id="assetType" hidden>
+          <option value="Shirt">Shirt</option>
+          <option value="Pants">Pants</option>
+        </select>
+      </div>
+      <div class="ribbon-group-label">Mode</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <button class="btn btn-sm btn-secondary" id="btnSelect" title="Select/Move (V)">Select</button>
+        <button class="btn btn-sm btn-secondary" id="btnDrawPen" title="Freehand draw (B)">Draw</button>
+        <button class="btn btn-sm btn-secondary" id="btnDrawLine" title="Line tool (L)">Line</button>
+        <button class="btn btn-sm btn-secondary" id="btnDrawRect" title="Rectangle (U)">Rect</button>
+        <button class="btn btn-sm btn-secondary" id="btnDrawCircle" title="Ellipse (O)">Ellipse</button>
+        <button class="btn btn-sm btn-secondary" id="btnEraser" title="Eraser (E)">Eraser</button>
+        <button class="btn btn-sm" id="btnToggleKeys" title="Toggle keyboard shortcuts" style="background:#2d4a2d;color:#7fff7f;font-size:10px;">Keys: ON</button>
+      </div>
+      <div class="ribbon-group-label">Tools</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:flex;gap:4px;align-items:center">
+          <input type="color" id="drawColor" value="#e040fb" title="Draw color" style="width:26px;height:24px;border:none;padding:0;cursor:pointer;border-radius:4px;">
+          <input type="range" id="drawSize" min="1" max="50" value="4" title="Brush size" style="width:60px;accent-color:#e040fb">
+        </div>
+        <label style="font-size:10px;color:#888;margin:0;display:flex;align-items:center;gap:2px"><input type="checkbox" id="drawFill"> Fill</label>
+      </div>
+      <div class="ribbon-group-label">Brush</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:flex;gap:3px">
+          <button class="btn btn-sm btn-secondary" id="btnFitFront" title="Fit to front torso">Fit Front</button>
+          <button class="btn btn-sm btn-secondary" id="btnFitFB" title="Front + Back">F+B</button>
+          <button class="btn btn-sm btn-secondary" id="btnStretch" title="Stretch across torso">Stretch</button>
+        </div>
+        <div style="display:flex;gap:3px">
+          <button class="btn btn-sm btn-secondary" id="btnAllover" title="Tile allover">Allover</button>
+          <button class="btn btn-sm btn-secondary" id="btnScatter" title="Scatter randomly">Scatter</button>
+        </div>
+      </div>
+      <div class="ribbon-group-label">Placement</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <button class="btn btn-sm btn-secondary" id="btnUndo">Undo</button>
+        <button class="btn btn-sm btn-secondary" id="btnClear">Clear</button>
+      </div>
+      <div class="ribbon-group-label">Edit</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:flex;gap:3px">
+          <button class="btn btn-sm btn-secondary" id="btnSaveProject" title="Save project JSON">Save</button>
+          <button class="btn btn-sm btn-secondary" id="btnLoadProject" title="Load project">Open</button>
+          <button class="btn btn-sm btn-secondary" id="btnLoadImage" title="Load image as layer">Image</button>
+        </div>
+        <div style="display:flex;gap:3px;align-items:center">
+          <button class="btn btn-sm btn-primary" id="btnExport">Export PNG</button>
+        </div>
+      </div>
+      <div class="ribbon-group-label">File</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <input type="text" id="exportTitle" placeholder="Template name..." style="background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:3px 8px;border-radius:4px;font-size:11px;width:140px;">
+        <div style="display:flex;gap:8px;align-items:center">
+          <label style="font-size:10px;display:flex;align-items:center;gap:3px;color:#999"><input type="checkbox" id="showMask" checked> Mask</label>
+          <label style="font-size:10px;display:flex;align-items:center;gap:3px;color:#999"><input type="checkbox" id="showGrid"> Grid</label>
+        </div>
+      </div>
+      <div class="ribbon-group-label">Export</div>
+    </div>
+    <input type="file" id="projectFileInput" accept=".json,.r15proj" hidden>
+    <input type="file" id="imageLoadInput" accept="image/*" multiple hidden>
+  </div>
+
+  <!-- LAYOUT TAB -->
+  <div class="ribbon-pane" data-tab="layout">
+    <div class="ribbon-group">
+      <div class="ribbon-group-items" style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;">
+        <button class="preset-btn" data-preset="meme" style="padding:4px 8px;font-size:10px;">Meme Tee</button>
+        <button class="preset-btn" data-preset="allover" style="padding:4px 8px;font-size:10px;">Allover</button>
+        <button class="preset-btn" data-preset="sleeve-pop" style="padding:4px 8px;font-size:10px;">Sleeve Pop</button>
+        <button class="preset-btn" data-preset="mirror" style="padding:4px 8px;font-size:10px;">Mirror F+B</button>
+        <button class="preset-btn" data-preset="scattered" style="padding:4px 8px;font-size:10px;">Scatter</button>
+        <button class="preset-btn" data-preset="fullbleed" style="padding:4px 8px;font-size:10px;">Fullbleed</button>
+      </div>
+      <div class="ribbon-group-label">Presets</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <div class="color-swatches" id="bgSwatches" style="display:flex;flex-wrap:wrap;gap:3px;"></div>
+      </div>
+      <div class="ribbon-group-label">Background</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:flex;gap:4px;align-items:center">
+          <input type="color" id="bgColor" value="#1a1a2e" style="width:30px;height:24px;border:none;cursor:pointer;">
+          <button class="btn btn-sm btn-secondary" id="bgImageBtn" style="font-size:10px;padding:3px 8px;">BG Image</button>
+          <input type="file" id="bgFileInput" accept="image/*" hidden>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <label style="font-size:9px;color:#888;margin:0;white-space:nowrap;">Opacity</label>
+          <input type="range" id="bgOpacity" min="0" max="100" value="100" style="width:80px;accent-color:#e040fb;">
+        </div>
+      </div>
+      <div class="ribbon-group-label">BG Settings</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items" id="regionGrid"></div>
+      <div class="ribbon-group-label">Template Regions</div>
+    </div>
+  </div>
+
+  <!-- DETAILS TAB -->
+  <div class="ribbon-pane" data-tab="details">
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:flex;gap:4px;align-items:center">
+          <input type="color" id="detailColor" value="#333333" style="width:26px;height:22px;border:none;cursor:pointer;">
+          <label style="font-size:9px;color:#888;margin:0">W</label>
+          <input type="range" id="detailWidth" min="1" max="8" value="2" style="width:50px;accent-color:#e040fb;">
+          <label style="font-size:9px;color:#888;margin:0;display:flex;align-items:center;gap:2px"><input type="checkbox" id="detailDash"> Stitch</label>
+        </div>
+      </div>
+      <div class="ribbon-group-label">Settings</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <button class="preset-btn detail-btn" data-detail="collar-v" style="padding:3px 7px;font-size:10px;">V-Neck</button>
+        <button class="preset-btn detail-btn" data-detail="collar-crew" style="padding:3px 7px;font-size:10px;">Crew</button>
+        <button class="preset-btn detail-btn" data-detail="collar-scoop" style="padding:3px 7px;font-size:10px;">Scoop</button>
+        <button class="preset-btn detail-btn" data-detail="collar-henley" style="padding:3px 7px;font-size:10px;">Henley</button>
+      </div>
+      <div class="ribbon-group-label">Neckline</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <button class="preset-btn detail-btn" data-detail="cuff-left" style="padding:3px 7px;font-size:10px;">L Cuff</button>
+        <button class="preset-btn detail-btn" data-detail="cuff-right" style="padding:3px 7px;font-size:10px;">R Cuff</button>
+        <button class="preset-btn detail-btn" data-detail="cuffs-both" style="padding:3px 7px;font-size:10px;">Both</button>
+        <button class="preset-btn detail-btn" data-detail="hem" style="padding:3px 7px;font-size:10px;">Hem</button>
+      </div>
+      <div class="ribbon-group-label">Edges</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <button class="preset-btn detail-btn" data-detail="seam-center" style="padding:3px 7px;font-size:10px;">Center</button>
+        <button class="preset-btn detail-btn" data-detail="seam-sides" style="padding:3px 7px;font-size:10px;">Sides</button>
+        <button class="preset-btn detail-btn" data-detail="shoulder-stripe" style="padding:3px 7px;font-size:10px;">Shoulder</button>
+        <button class="preset-btn detail-btn" data-detail="arm-bands" style="padding:3px 7px;font-size:10px;">Bands</button>
+        <button class="preset-btn detail-btn" data-detail="yoke" style="padding:3px 7px;font-size:10px;">Yoke</button>
+      </div>
+      <div class="ribbon-group-label">Seams</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items">
+        <button class="preset-btn detail-btn" data-detail="pocket" style="padding:3px 7px;font-size:10px;">Pocket</button>
+        <button class="preset-btn detail-btn" data-detail="placket" style="padding:3px 7px;font-size:10px;">Placket</button>
+        <button class="preset-btn detail-btn" data-detail="full-detail" style="padding:3px 7px;font-size:10px;border-color:#7c4dff;color:#b388ff;">Full Set</button>
+      </div>
+      <div class="ribbon-group-label">Accents</div>
+    </div>
+  </div>
+
+  <!-- TEXT TAB -->
+  <div class="ribbon-pane" data-tab="text">
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <textarea id="waText" placeholder="Type text..." rows="2" style="width:150px;min-height:36px;background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:4px 8px;border-radius:4px;font-size:12px;resize:vertical;font-family:inherit;">RIZZ</textarea>
+        <select id="waFont" style="width:150px;background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:2px 6px;border-radius:4px;font-size:10px;">
+          <option value="Anton">Anton (Block)</option>
+          <option value="Bebas Neue">Bebas Neue (Tall)</option>
+          <option value="Dancing Script">Dancing Script</option>
+          <option value="Great Vibes">Great Vibes</option>
+          <option value="Pacifico">Pacifico (Retro)</option>
+          <option value="Creepster">Creepster</option>
+          <option value="Poppins">Poppins (Bold)</option>
+          <option value="Lato">Lato (Modern)</option>
+          <option value="Bangers">Bangers (Comic)</option>
+          <option value="Permanent Marker">Permanent Marker</option>
+          <option value="Bungee Shade">Bungee Shade (3D)</option>
+          <option value="Rubik Mono One">Rubik Mono</option>
+          <option value="Press Start 2P">Press Start 2P</option>
+          <option value="Righteous">Righteous</option>
+          <option value="Orbitron">Orbitron (Cyber)</option>
+        </select>
+      </div>
+      <div class="ribbon-group-label">Text</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert">
+        <div style="display:flex;gap:4px;align-items:center">
+          <div style="text-align:center"><label style="font-size:8px;color:#666">Fill</label><br><input type="color" id="waColor" value="#e040fb" style="width:28px;height:20px;border:none;cursor:pointer;"></div>
+          <div style="text-align:center"><label style="font-size:8px;color:#666">Stroke</label><br><input type="color" id="waStroke" value="#000000" style="width:28px;height:20px;border:none;cursor:pointer;"></div>
+          <div style="text-align:center"><label style="font-size:8px;color:#666">Grad</label><br><input type="color" id="waColor2" value="#00e5ff" style="width:28px;height:20px;border:none;cursor:pointer;"></div>
+          <div style="text-align:center"><label style="font-size:8px;color:#666">Size</label><br><input type="number" id="waSize" value="64" min="8" max="300" style="width:44px;background:#1a1a2e;border:1px solid #333;color:#e0e0e0;padding:1px 4px;border-radius:3px;font-size:10px;"></div>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center">
+          <label style="font-size:8px;color:#666;white-space:nowrap">Stroke W</label>
+          <input type="range" id="waStrokeW" min="0" max="20" value="3" style="width:60px;accent-color:#e040fb">
+          <label style="font-size:8px;color:#666;white-space:nowrap">Angle</label>
+          <input type="range" id="waAngle" min="0" max="360" value="0" style="width:50px;accent-color:#00e5ff">
+        </div>
+      </div>
+      <div class="ribbon-group-label">Colors & Size</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items" style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">
+        <button class="wordart-style-btn active" data-style="solid" style="padding:3px 6px;font-size:9px;">Solid</button>
+        <button class="wordart-style-btn" data-style="gradient" style="padding:3px 6px;font-size:9px;">Gradient</button>
+        <button class="wordart-style-btn" data-style="neon" style="padding:3px 6px;font-size:9px;">Neon</button>
+        <button class="wordart-style-btn" data-style="shadow" style="padding:3px 6px;font-size:9px;">Shadow</button>
+        <button class="wordart-style-btn" data-style="outline" style="padding:3px 6px;font-size:9px;">Outline</button>
+        <button class="wordart-style-btn" data-style="retro" style="padding:3px 6px;font-size:9px;">Retro</button>
+      </div>
+      <div class="ribbon-group-label">Style</div>
+    </div>
+    <div class="ribbon-group">
+      <div class="ribbon-group-items vert" style="align-items:center;">
+        <div class="wordart-preview" style="background:#000;border:1px solid #333;border-radius:4px;min-height:44px;display:flex;align-items:center;justify-content:center;overflow:hidden;"><canvas id="waPreview" width="200" height="60"></canvas></div>
+        <button class="btn btn-primary btn-sm" id="btnAddWordArt" style="width:100%;font-size:10px;padding:3px 8px;">Add to Canvas</button>
+      </div>
+      <div class="ribbon-group-label">Preview</div>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- LEFT: Layers & Images -->
+  <div class="panel">
+    <h3>Asset Library</h3>
+    <div class="controls" style="margin-bottom:8px;">
+      <label style="font-size:10px;color:#888">Load Folder</label>
+      <div class="row" style="gap:4px;">
+        <button class="btn btn-sm btn-secondary" id="btnLoadFolder" title="Pick a folder of PNGs to browse">Open Folder</button>
+        <input type="file" id="folderInput" webkitdirectory directory multiple hidden>
+      </div>
+      <div id="assetBrowser" style="max-height:180px;overflow-y:auto;margin-top:6px;display:none;">
+        <div id="assetSubfolders" style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px;"></div>
+        <div id="assetGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;"></div>
+      </div>
+      <div id="assetCount" style="font-size:10px;color:#555;margin-top:4px;"></div>
+      <div class="asset-resize-handle" id="assetResizeHandle" title="Drag to resize"></div>
+    </div>
+
+    <h3>Drop Art Here</h3>
+    <div class="drop-zone" id="dropZone">
+      Drag & drop PNG images<br>or click to browse
+      <input type="file" id="fileInput" accept="image/*" multiple hidden>
+    </div>
+
+    <h3>Layers <span style="font-size:10px;color:#555;text-transform:none">(drag to reorder)</span></h3>
+    <div class="layer-list" id="layerList"></div>
+
+    <h3>Selected Layer</h3>
+    <div class="controls" id="layerControls">
+      <p class="info">Select a layer to edit</p>
+    </div>
+
+  </div>
+
+  <!-- CENTER: Canvas -->
+  <div class="canvas-area">
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="mainCanvas" width="585" height="559"></canvas>
+    </div>
+    <div class="zoom-controls">
+      <button id="zoomOut">-</button>
+      <span id="zoomLevel">100%</span>
+      <button id="zoomIn">+</button>
+    </div>
+  </div>
+
+  <!-- btnExport2 kept for JS compat -->
+  <button id="btnExport2" hidden></button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// RIBBON TAB SWITCHING
+// ═══════════════════════════════════════════════════════════
+document.querySelectorAll('.ribbon-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    document.querySelectorAll('.ribbon-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.ribbon-pane').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const pane = document.querySelector(`.ribbon-pane[data-tab="${target}"]`);
+    if (pane) pane.classList.add('active');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+// R15 TEMPLATE CONSTANTS — SHIRT & PANTS
+// ═══════════════════════════════════════════════════════════
+const TW = 585, TH = 559;
+
+const SHIRT_REGION_DATA = {
+  torso_up:    {x:231, y:8,   w:128, h:64},
+  torso_right: {x:165, y:74,  w:64,  h:128},
+  torso_front: {x:231, y:74,  w:128, h:128},
+  torso_left:  {x:361, y:74,  w:64,  h:128},
+  torso_back:  {x:427, y:74,  w:128, h:128},
+  torso_down:  {x:231, y:204, w:128, h:64},
+  rarm_up:     {x:217, y:289, w:64,  h:64},
+  rarm_left:   {x:19,  y:355, w:64,  h:128},
+  rarm_back:   {x:85,  y:355, w:64,  h:128},
+  rarm_right:  {x:151, y:355, w:64,  h:128},
+  rarm_front:  {x:217, y:355, w:64,  h:128},
+  rarm_down:   {x:217, y:485, w:64,  h:64},
+  larm_up:     {x:308, y:289, w:64,  h:64},
+  larm_front:  {x:308, y:355, w:64,  h:128},
+  larm_left:   {x:374, y:355, w:64,  h:128},
+  larm_back:   {x:440, y:355, w:64,  h:128},
+  larm_right:  {x:506, y:355, w:64,  h:128},
+  larm_down:   {x:308, y:485, w:64,  h:64},
+};
+
+const PANTS_REGION_DATA = {
+  waist_up:    {x:231, y:8,   w:128, h:64},
+  waist_right: {x:165, y:74,  w:64,  h:128},
+  waist_front: {x:231, y:74,  w:128, h:128},
+  waist_left:  {x:361, y:74,  w:64,  h:128},
+  waist_back:  {x:427, y:74,  w:128, h:128},
+  waist_down:  {x:231, y:204, w:128, h:64},
+  rleg_up:     {x:217, y:289, w:64,  h:64},
+  rleg_left:   {x:19,  y:355, w:64,  h:128},
+  rleg_back:   {x:85,  y:355, w:64,  h:128},
+  rleg_right:  {x:151, y:355, w:64,  h:128},
+  rleg_front:  {x:217, y:355, w:64,  h:128},
+  rleg_down:   {x:217, y:485, w:64,  h:64},
+  lleg_up:     {x:308, y:289, w:64,  h:64},
+  lleg_front:  {x:308, y:355, w:64,  h:128},
+  lleg_left:   {x:374, y:355, w:64,  h:128},
+  lleg_back:   {x:440, y:355, w:64,  h:128},
+  lleg_right:  {x:506, y:355, w:64,  h:128},
+  lleg_down:   {x:308, y:485, w:64,  h:64},
+};
+
+// Active regions — mutable reference swapped on mode change
+let SHIRT_REGIONS = {...SHIRT_REGION_DATA};
+let currentMode = 'Shirt'; // 'Shirt' or 'Pants'
+
+const BG_COLORS = [
+  {name:'Midnight',c:'#1a1a2e'}, {name:'Navy',c:'#16213e'}, {name:'Black',c:'#0f0f0f'},
+  {name:'Charcoal',c:'#2d2d2d'}, {name:'Wine',c:'#4a1942'}, {name:'Forest',c:'#1b4332'},
+  {name:'Ocean',c:'#0c2461'}, {name:'Storm',c:'#2c3e50'}, {name:'White',c:'#f5f5f5'},
+  {name:'Red',c:'#b71c1c'}, {name:'Purple',c:'#4a148c'}, {name:'Teal',c:'#004d40'},
+];
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let layers = [];
+let selectedLayerId = null;
+let bgColor = '#1a1a2e';
+let bgImage = null;
+let bgOpacity = 1;
+let zoom = 1;
+let showMask = true;
+let showGrid = false;
+let undoStack = [];
+
+// Current tool: 'select', 'pen', 'line', 'rect', 'circle', 'eraser'
+let currentTool = 'select';
+let drawColor = '#e040fb';
+let drawSize = 4;
+let drawFill = false;
+
+// Drawing layers (freehand strokes stored as image layers)
+let isDrawing = false;
+let drawStartX = 0, drawStartY = 0;
+let drawPoints = []; // for pen tool
+let drawCanvas = null; // offscreen canvas for live drawing preview
+
+// Drag state
+let dragging = null;
+let dragStart = {x:0, y:0};
+let layerStart = {x:0, y:0};
+
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
+
+// ═══════════════════════════════════════════════════════════
+// REGION MASK
+// ═══════════════════════════════════════════════════════════
+let maskCanvas, maskCtx;
+function buildMask() {
+  maskCanvas = document.createElement('canvas');
+  maskCanvas.width = TW; maskCanvas.height = TH;
+  maskCtx = maskCanvas.getContext('2d');
+  maskCtx.clearRect(0,0,TW,TH);
+  maskCtx.fillStyle = '#fff';
+  for (const r of Object.values(SHIRT_REGIONS)) {
+    maskCtx.fillRect(r.x, r.y, r.w, r.h);
+  }
+}
+buildMask();
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+function render() {
+  const off = document.createElement('canvas');
+  off.width = TW; off.height = TH;
+  const oc = off.getContext('2d');
+
+  // Background
+  oc.clearRect(0,0,TW,TH);
+  if (bgImage) {
+    oc.globalAlpha = bgOpacity;
+    oc.drawImage(bgImage, 0, 0, TW, TH);
+    oc.globalAlpha = 1;
+  } else {
+    oc.fillStyle = bgColor;
+    oc.globalAlpha = bgOpacity;
+    oc.fillRect(0, 0, TW, TH);
+    oc.globalAlpha = 1;
+  }
+
+  // Per-region colors
+  for (const [rName, color] of Object.entries(regionColors)) {
+    const r = SHIRT_REGIONS[rName];
+    if (r && color) {
+      oc.fillStyle = color;
+      oc.fillRect(r.x, r.y, r.w, r.h);
+    }
+  }
+
+  // Layers (bottom to top)
+  for (const layer of layers) {
+    if (!layer.visible || !layer.img) continue;
+    oc.save();
+    oc.globalAlpha = layer.opacity;
+    const cx = layer.x + (layer.img.width * layer.scale) / 2;
+    const cy = layer.y + (layer.img.height * layer.scale) / 2;
+    oc.translate(cx, cy);
+    oc.rotate(layer.rotation * Math.PI / 180);
+    if (layer.flipH) oc.scale(-1, 1);
+    if (layer.flipV) oc.scale(1, -1);
+    const w = layer.img.width * layer.scale;
+    const h = layer.img.height * layer.scale;
+    oc.drawImage(layer.img, -w/2, -h/2, w, h);
+    oc.restore();
+  }
+
+  // Draw live preview (shape being drawn right now)
+  if (drawCanvas) {
+    oc.drawImage(drawCanvas, 0, 0);
+  }
+
+  // Apply mask
+  if (showMask) {
+    oc.globalCompositeOperation = 'destination-in';
+    oc.drawImage(maskCanvas, 0, 0);
+    oc.globalCompositeOperation = 'source-over';
+  }
+
+  // Draw to visible canvas with zoom
+  canvas.width = TW * zoom;
+  canvas.height = TH * zoom;
+  ctx.imageSmoothingEnabled = zoom < 1;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Checkerboard for transparency
+  const pat = ctx.createPattern(makeCheckerboard(), 'repeat');
+  ctx.fillStyle = pat;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.drawImage(off, 0, 0, canvas.width, canvas.height);
+
+  // Grid overlay
+  if (showGrid) {
+    ctx.strokeStyle = 'rgba(255,255,0,0.3)';
+    ctx.lineWidth = 1;
+    for (const r of Object.values(SHIRT_REGIONS)) {
+      ctx.strokeRect(r.x*zoom, r.y*zoom, r.w*zoom, r.h*zoom);
+    }
+  }
+
+  // Selection highlight + handles (only in select mode)
+  if (currentTool === 'select' && selectedLayerId !== null) {
+    const layer = layers.find(l => l.id === selectedLayerId);
+    if (layer && layer.img) {
+      const w = layer.img.width * layer.scale * zoom;
+      const h = layer.img.height * layer.scale * zoom;
+      const cx = layer.x * zoom + w / 2;
+      const cy = layer.y * zoom + h / 2;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(layer.rotation * Math.PI / 180);
+
+      // Bounding box
+      ctx.strokeStyle = '#e040fb';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5,5]);
+      ctx.strokeRect(-w/2, -h/2, w, h);
+      ctx.setLineDash([]);
+
+      // Corner resize handles
+      ctx.fillStyle = '#e040fb';
+      const corners = [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]];
+      corners.forEach(([hx,hy]) => ctx.fillRect(hx-4, hy-4, 8, 8));
+
+      // Rotation handle
+      const rotHandleDist = 30;
+      ctx.beginPath();
+      ctx.moveTo(0, -h/2);
+      ctx.lineTo(0, -h/2 - rotHandleDist);
+      ctx.strokeStyle = '#00e5ff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, -h/2 - rotHandleDist, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#00e5ff';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, -h/2 - rotHandleDist, 4, -Math.PI * 0.7, Math.PI * 0.4);
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      const ax = Math.cos(Math.PI * 0.4) * 4;
+      const ay = -h/2 - rotHandleDist + Math.sin(Math.PI * 0.4) * 4;
+      ctx.beginPath();
+      ctx.moveTo(ax - 3, ay - 2);
+      ctx.lineTo(ax, ay);
+      ctx.lineTo(ax + 2, ay - 3);
+      ctx.stroke();
+
+      if (layer.rotation !== 0) {
+        ctx.font = '11px system-ui';
+        ctx.fillStyle = '#00e5ff';
+        ctx.textAlign = 'center';
+        ctx.fillText(layer.rotation.toFixed(1) + '\u00B0', 0, -h/2 - rotHandleDist - 16);
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // Update cursor based on tool
+  updateCursor();
+}
+
+function makeCheckerboard() {
+  const c = document.createElement('canvas');
+  c.width = 16; c.height = 16;
+  const x = c.getContext('2d');
+  x.fillStyle = '#1a1a2e'; x.fillRect(0,0,16,16);
+  x.fillStyle = '#111'; x.fillRect(0,0,8,8); x.fillRect(8,8,8,8);
+  return c;
+}
+
+function updateCursor() {
+  const cursors = { select:'crosshair', pen:'crosshair', line:'crosshair', rect:'crosshair', circle:'crosshair', eraser:'crosshair' };
+  canvas.style.cursor = cursors[currentTool] || 'crosshair';
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOOL SWITCHING
+// ═══════════════════════════════════════════════════════════
+const toolButtons = {
+  select: document.getElementById('btnSelect'),
+  pen: document.getElementById('btnDrawPen'),
+  line: document.getElementById('btnDrawLine'),
+  rect: document.getElementById('btnDrawRect'),
+  circle: document.getElementById('btnDrawCircle'),
+  eraser: document.getElementById('btnEraser'),
+};
+
+function setTool(tool) {
+  currentTool = tool;
+  Object.values(toolButtons).forEach(b => b.classList.remove('btn-active'));
+  if (toolButtons[tool]) toolButtons[tool].classList.add('btn-active');
+  updateCursor();
+}
+setTool('select');
+
+Object.entries(toolButtons).forEach(([tool, btn]) => {
+  btn.onclick = () => setTool(tool);
+});
+
+document.getElementById('drawColor').oninput = e => drawColor = e.target.value;
+document.getElementById('drawSize').oninput = e => drawSize = +e.target.value;
+document.getElementById('drawFill').onchange = e => drawFill = e.target.checked;
+
+// ═══════════════════════════════════════════════════════════
+// LAYERS
+// ═══════════════════════════════════════════════════════════
+let nextId = 1;
+function addLayer(img, name) {
+  saveUndo();
+  const front = SHIRT_REGIONS.torso_front;
+  const scale = Math.min(front.w / img.width, front.h / img.height) * 0.85;
+  const layer = {
+    id: nextId++,
+    name: name || 'Image ' + nextId,
+    img, visible: true, opacity: 1,
+    x: front.x + (front.w - img.width * scale) / 2,
+    y: front.y + (front.h - img.height * scale) / 2,
+    scale, rotation: 0, flipH: false, flipV: false,
+  };
+  layers.push(layer);
+  selectedLayerId = layer.id;
+  setTool('select');
+  updateUI();
+  render();
+}
+
+function addDrawingLayer(drawingCanvas, name) {
+  // Auto-crop to actual drawn pixels so bounding box is tight
+  const sw = drawingCanvas.width, sh = drawingCanvas.height;
+  const pxData = drawingCanvas.getContext('2d').getImageData(0, 0, sw, sh);
+  let minX = sw, minY = sh, maxX = 0, maxY = 0;
+  for (let y = 0; y < sh; y++) {
+    for (let x = 0; x < sw; x++) {
+      if (pxData.data[(y * sw + x) * 4 + 3] > 0) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < minX) return; // nothing drawn
+  const pad = 10;
+  minX = Math.max(0, minX - pad);
+  minY = Math.max(0, minY - pad);
+  maxX = Math.min(sw - 1, maxX + pad);
+  maxY = Math.min(sh - 1, maxY + pad);
+  const cropW = maxX - minX + 1;
+  const cropH = maxY - minY + 1;
+
+  const cropped = document.createElement('canvas');
+  cropped.width = cropW;
+  cropped.height = cropH;
+  cropped.getContext('2d').drawImage(drawingCanvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+
+  const img = new Image();
+  img.onload = () => {
+    const layer = {
+      id: nextId++,
+      name: name || 'Drawing ' + nextId,
+      img, visible: true, opacity: 1,
+      x: minX, y: minY,
+      scale: 1, rotation: 0, flipH: false, flipV: false,
+    };
+    layers.push(layer);
+    selectedLayerId = layer.id;
+    updateUI();
+    render();
+  };
+  img.src = cropped.toDataURL();
+}
+
+function duplicateLayer(id) {
+  const src = layers.find(l => l.id === id);
+  if (!src) return;
+  saveUndo();
+  const clone = {
+    ...src,
+    id: nextId++,
+    name: src.name + ' copy',
+    x: src.x + 10,
+    y: src.y + 10,
+    img: src.img,
+  };
+  // Insert right above original
+  const idx = layers.findIndex(l => l.id === id);
+  layers.splice(idx + 1, 0, clone);
+  selectedLayerId = clone.id;
+  updateUI();
+  render();
+}
+
+function removeLayer(id) {
+  saveUndo();
+  layers = layers.filter(l => l.id !== id);
+  if (selectedLayerId === id) selectedLayerId = layers.length ? layers[layers.length-1].id : null;
+  updateUI();
+  render();
+}
+
+function toggleLayerVisibility(id) {
+  const l = layers.find(l => l.id === id);
+  if (l) { l.visible = !l.visible; updateUI(); render(); }
+}
+
+function selectLayer(id) {
+  selectedLayerId = id;
+  setTool('select');
+  updateUI();
+  render();
+}
+
+function getSelected() { return layers.find(l => l.id === selectedLayerId); }
+
+// ═══════════════════════════════════════════════════════════
+// DRAG-TO-REORDER LAYERS IN PANEL
+// ═══════════════════════════════════════════════════════════
+let layerDragId = null;
+let layerDragOverId = null;
+let layerDragPos = null; // 'top' or 'bottom'
+
+function handleLayerDragStart(e, id) {
+  layerDragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', id);
+  setTimeout(() => {
+    document.querySelectorAll('.layer-item').forEach(el => {
+      if (+el.dataset.layerId === id) el.classList.add('dragging-layer');
+    });
+  }, 0);
+}
+
+function handleLayerDragOver(e, id) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  if (id === layerDragId) return;
+
+  const rect = e.currentTarget.getBoundingClientRect();
+  const midY = rect.top + rect.height / 2;
+  const pos = e.clientY < midY ? 'top' : 'bottom';
+
+  // Clear old indicators
+  document.querySelectorAll('.layer-item').forEach(el => {
+    el.classList.remove('drag-over-top', 'drag-over-bottom');
+  });
+
+  e.currentTarget.classList.add(pos === 'top' ? 'drag-over-top' : 'drag-over-bottom');
+  layerDragOverId = id;
+  layerDragPos = pos;
+}
+
+function handleLayerDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (layerDragId == null || layerDragOverId == null || layerDragId === layerDragOverId) {
+    cleanupLayerDrag();
+    return;
+  }
+
+  saveUndo();
+
+  // Layers are displayed top-to-bottom = reverse of array order (top layer = last in array)
+  // In the UI, higher items = higher z-order = later in the array
+  const dragIdx = layers.findIndex(l => l.id === layerDragId);
+  const overIdx = layers.findIndex(l => l.id === layerDragOverId);
+
+  if (dragIdx === -1 || overIdx === -1) { cleanupLayerDrag(); return; }
+
+  // Remove dragged layer
+  const [moved] = layers.splice(dragIdx, 1);
+
+  // The list is displayed in REVERSE (top of list = end of array)
+  // "drag-over-top" in the UI means "above in z-order" = after in array
+  // "drag-over-bottom" means "below in z-order" = before in array
+  let insertIdx = layers.findIndex(l => l.id === layerDragOverId);
+  if (layerDragPos === 'top') {
+    // Insert after the target in the array (above in z-order)
+    layers.splice(insertIdx + 1, 0, moved);
+  } else {
+    // Insert before the target in the array (below in z-order)
+    layers.splice(insertIdx, 0, moved);
+  }
+
+  cleanupLayerDrag();
+  updateUI();
+  render();
+}
+
+function cleanupLayerDrag() {
+  layerDragId = null;
+  layerDragOverId = null;
+  layerDragPos = null;
+  document.querySelectorAll('.layer-item').forEach(el => {
+    el.classList.remove('dragging-layer', 'drag-over-top', 'drag-over-bottom');
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// UI
+// ═══════════════════════════════════════════════════════════
+function updateUI() {
+  // Layer list (top = highest z-order = last in array)
+  const list = document.getElementById('layerList');
+  list.innerHTML = '';
+  for (let i = layers.length - 1; i >= 0; i--) {
+    const l = layers[i];
+    const div = document.createElement('div');
+    div.className = 'layer-item' + (l.id === selectedLayerId ? ' selected' : '');
+    div.dataset.layerId = l.id;
+    div.draggable = true;
+
+    const thumb = document.createElement('img');
+    thumb.src = l.img.src;
+    thumb.alt = '';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'name';
+    nameSpan.textContent = l.name;
+    nameSpan.style.opacity = l.visible ? '1' : '0.4';
+
+    const btns = document.createElement('span');
+    btns.className = 'layer-btns';
+    btns.innerHTML = `
+      <button class="btn-vis ${l.visible ? '' : 'hidden-layer'}" data-action="vis" title="${l.visible ? 'Hide' : 'Show'}">${l.visible ? '\u{1F441}' : '\u{1F441}\u200D\u{1F5E8}'}</button>
+      <button class="btn-dupe" data-action="dupe" title="Duplicate">\u{2398}</button>
+      <button class="btn-del" data-action="del" title="Delete">&times;</button>
+    `;
+
+    div.appendChild(thumb);
+    div.appendChild(nameSpan);
+    div.appendChild(btns);
+
+    // Click to select
+    div.addEventListener('click', (e) => {
+      if (e.target.dataset.action) return;
+      selectLayer(l.id);
+    });
+
+    // Button actions
+    btns.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const action = btn.dataset.action;
+        if (action === 'del') removeLayer(l.id);
+        else if (action === 'dupe') duplicateLayer(l.id);
+        else if (action === 'vis') toggleLayerVisibility(l.id);
+      });
+    });
+
+    // Drag-to-reorder events
+    div.addEventListener('dragstart', (e) => handleLayerDragStart(e, l.id));
+    div.addEventListener('dragover', (e) => handleLayerDragOver(e, l.id));
+    div.addEventListener('drop', handleLayerDrop);
+    div.addEventListener('dragend', cleanupLayerDrag);
+
+    list.appendChild(div);
+  }
+
+  // Controls for selected layer
+  const ctrl = document.getElementById('layerControls');
+  const sel = getSelected();
+  if (!sel) {
+    ctrl.innerHTML = '<p class="info">Select a layer to edit</p>';
+    return;
+  }
+  ctrl.innerHTML = `
+    <label>Name</label>
+    <input type="text" id="ctrlName" value="${sel.name}">
+    <label>X: <span id="xVal">${sel.x.toFixed(0)}</span> &nbsp; Y: <span id="yVal">${sel.y.toFixed(0)}</span></label>
+    <div class="row">
+      <input type="number" id="ctrlX" value="${sel.x.toFixed(0)}" style="width:50%">
+      <input type="number" id="ctrlY" value="${sel.y.toFixed(0)}" style="width:50%">
+    </div>
+    <label>Scale: <span id="scaleVal">${(sel.scale*100).toFixed(0)}%</span></label>
+    <input type="range" id="ctrlScale" min="1" max="500" value="${sel.scale*100}">
+    <label>Rotation: <span id="rotVal">${sel.rotation}\u00B0</span></label>
+    <input type="range" id="ctrlRot" min="-180" max="180" value="${sel.rotation}">
+    <label>Opacity: <span id="opaVal">${(sel.opacity*100).toFixed(0)}%</span></label>
+    <input type="range" id="ctrlOpa" min="0" max="100" value="${sel.opacity*100}">
+    <div class="row" style="margin-top:6px">
+      <button class="btn btn-sm btn-secondary" id="btnFlipH">Flip H</button>
+      <button class="btn btn-sm btn-secondary" id="btnFlipV">Flip V</button>
+      <button class="btn btn-sm btn-secondary" id="btnDupe">Duplicate</button>
+    </div>
+    <div class="row" style="margin-top:4px">
+      <button class="btn btn-sm btn-secondary" id="btnMoveUp">\u2191 Up</button>
+      <button class="btn btn-sm btn-secondary" id="btnMoveDown">\u2193 Down</button>
+    </div>
+    <div style="margin-top:6px">
+      <button class="btn btn-sm btn-secondary" id="btnCenterFront" style="width:100%">Center on Front Torso</button>
+    </div>
+  `;
+
+  document.getElementById('ctrlName').onchange = e => { sel.name = e.target.value; updateUI(); };
+  document.getElementById('ctrlX').onchange = e => { sel.x = +e.target.value; render(); };
+  document.getElementById('ctrlY').onchange = e => { sel.y = +e.target.value; render(); };
+  document.getElementById('ctrlScale').oninput = e => {
+    sel.scale = e.target.value / 100;
+    document.getElementById('scaleVal').textContent = e.target.value + '%';
+    render();
+  };
+  document.getElementById('ctrlRot').oninput = e => {
+    sel.rotation = +e.target.value;
+    document.getElementById('rotVal').textContent = e.target.value + '\u00B0';
+    render();
+  };
+  document.getElementById('ctrlOpa').oninput = e => {
+    sel.opacity = e.target.value / 100;
+    document.getElementById('opaVal').textContent = e.target.value + '%';
+    render();
+  };
+  document.getElementById('btnFlipH').onclick = () => { sel.flipH = !sel.flipH; render(); };
+  document.getElementById('btnFlipV').onclick = () => { sel.flipV = !sel.flipV; render(); };
+  document.getElementById('btnDupe').onclick = () => duplicateLayer(sel.id);
+  document.getElementById('btnMoveUp').onclick = () => {
+    const i = layers.findIndex(l => l.id === sel.id);
+    if (i < layers.length - 1) { [layers[i], layers[i+1]] = [layers[i+1], layers[i]]; updateUI(); render(); }
+  };
+  document.getElementById('btnMoveDown').onclick = () => {
+    const i = layers.findIndex(l => l.id === sel.id);
+    if (i > 0) { [layers[i], layers[i-1]] = [layers[i-1], layers[i]]; updateUI(); render(); }
+  };
+  document.getElementById('btnCenterFront').onclick = () => {
+    const front = SHIRT_REGIONS.torso_front;
+    sel.x = front.x + (front.w - sel.img.width * sel.scale) / 2;
+    sel.y = front.y + (front.h - sel.img.height * sel.scale) / 2;
+    render();
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
+// BG SWATCHES
+// ═══════════════════════════════════════════════════════════
+const swatchDiv = document.getElementById('bgSwatches');
+BG_COLORS.forEach(c => {
+  const s = document.createElement('div');
+  s.className = 'swatch'; s.style.background = c.c; s.title = c.name;
+  s.onclick = () => { bgColor = c.c; bgImage = null; document.getElementById('bgColor').value = c.c; render(); };
+  swatchDiv.appendChild(s);
+});
+
+document.getElementById('bgColor').oninput = e => { bgColor = e.target.value; bgImage = null; render(); };
+document.getElementById('bgOpacity').oninput = e => { bgOpacity = e.target.value / 100; render(); };
+
+document.getElementById('bgImageBtn').onclick = () => document.getElementById('bgFileInput').click();
+document.getElementById('bgFileInput').onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => { bgImage = img; render(); };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+// ═══════════════════════════════════════════════════════════
+// FILE DROP
+// ═══════════════════════════════════════════════════════════
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.onclick = () => fileInput.click();
+dropZone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); });
+fileInput.onchange = e => handleFiles(e.target.files);
+
+// Also allow drop on canvas (with stopPropagation to prevent double-add)
+canvas.ondragover = e => { e.preventDefault(); e.stopPropagation(); };
+canvas.ondrop = e => { e.preventDefault(); e.stopPropagation(); handleFiles(e.dataTransfer.files); };
+
+// CRITICAL: Prevent browser from opening dropped files
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => e.preventDefault());
+
+function isImageFile(f) {
+  if (f.type && f.type.startsWith('image/')) return true;
+  const ext = f.name.toLowerCase().split('.').pop();
+  return ['png','jpg','jpeg','gif','webp','bmp','svg'].includes(ext);
+}
+
+function handleFiles(files) {
+  for (const f of files) {
+    if (!isImageFile(f)) { console.log('Skipped non-image:', f.name, f.type); continue; }
+    const name = f.name.replace(/\.[^.]+$/, '');
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => { console.log('Loaded:', name, img.width+'x'+img.height); addLayer(img, name); };
+      img.onerror = err => console.error('Image load failed:', name, err);
+      img.src = ev.target.result;
+    };
+    reader.onerror = err => console.error('FileReader failed:', name, err);
+    reader.readAsDataURL(f);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// CANVAS MOUSE - SELECT TOOL (drag, rotate, resize)
+// ═══════════════════════════════════════════════════════════
+let dragMode = null; // 'move', 'rotate', 'resize'
+let rotStartAngle = 0;
+let resizeCorner = -1;
+let resizeStartScale = 0;
+let resizeStartDist = 0;
+
+function getLayerCenter(l) {
+  const w = l.img.width * l.scale;
+  const h = l.img.height * l.scale;
+  return { x: l.x + w/2, y: l.y + h/2 };
+}
+
+function getRotHandlePos(l) {
+  const w = l.img.width * l.scale;
+  const h = l.img.height * l.scale;
+  const c = getLayerCenter(l);
+  const rad = l.rotation * Math.PI / 180;
+  const dist = h/2 + 30/zoom;
+  return {
+    x: c.x - Math.sin(rad) * dist,
+    y: c.y - Math.cos(rad) * dist
+  };
+}
+
+function ptDist(a, b) { return Math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2); }
+
+function pointInRotatedRect(px, py, l) {
+  const c = getLayerCenter(l);
+  const rad = -l.rotation * Math.PI / 180;
+  const dx = px - c.x;
+  const dy = py - c.y;
+  const lx = dx * Math.cos(rad) - dy * Math.sin(rad);
+  const ly = dx * Math.sin(rad) + dy * Math.cos(rad);
+  const hw = l.img.width * l.scale / 2;
+  const hh = l.img.height * l.scale / 2;
+  return lx >= -hw && lx <= hw && ly >= -hh && ly <= hh;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CANVAS MOUSE - UNIFIED HANDLER
+// ═══════════════════════════════════════════════════════════
+canvas.onmousedown = e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) / zoom;
+  const my = (e.clientY - rect.top) / zoom;
+
+  // ─── SELECT TOOL ───
+  if (currentTool === 'select') {
+    // Check rotation handle on selected layer first
+    const sel = getSelected();
+    if (sel && sel.img) {
+      const rh = getRotHandlePos(sel);
+      if (ptDist({x:mx,y:my}, rh) < 14/zoom) {
+        dragMode = 'rotate';
+        dragging = sel;
+        const c = getLayerCenter(sel);
+        rotStartAngle = Math.atan2(mx - c.x, -(my - c.y)) * 180 / Math.PI - sel.rotation;
+        canvas.style.cursor = 'grabbing';
+        return;
+      }
+
+      // Check corner handles for resize
+      const w = sel.img.width * sel.scale;
+      const h = sel.img.height * sel.scale;
+      const c = getLayerCenter(sel);
+      const rad = sel.rotation * Math.PI / 180;
+      const corners = [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]];
+      for (let i = 0; i < corners.length; i++) {
+        const [lx, ly] = corners[i];
+        const wx = c.x + lx * Math.cos(rad) - ly * Math.sin(rad);
+        const wy = c.y + lx * Math.sin(rad) + ly * Math.cos(rad);
+        if (ptDist({x:mx,y:my}, {x:wx,y:wy}) < 10/zoom) {
+          dragMode = 'resize';
+          dragging = sel;
+          resizeCorner = i;
+          resizeStartScale = sel.scale;
+          resizeStartDist = ptDist({x:mx,y:my}, c);
+          canvas.style.cursor = 'nwse-resize';
+          return;
+        }
+      }
+    }
+
+    // Find topmost layer under cursor
+    for (let i = layers.length - 1; i >= 0; i--) {
+      const l = layers[i];
+      if (!l.visible || !l.img) continue;
+      if (pointInRotatedRect(mx, my, l)) {
+        selectLayer(l.id);
+        dragMode = 'move';
+        dragging = l;
+        dragStart = {x: mx, y: my};
+        layerStart = {x: l.x, y: l.y};
+        canvas.style.cursor = 'move';
+        return;
+      }
+    }
+    selectedLayerId = null;
+    dragMode = null;
+    updateUI(); render();
+    return;
+  }
+
+  // ─── DRAWING TOOLS ───
+  if (['pen','line','rect','circle','eraser'].includes(currentTool)) {
+    saveUndo();
+    isDrawing = true;
+    drawStartX = mx;
+    drawStartY = my;
+    drawPoints = [{x:mx, y:my}];
+
+    // Create offscreen draw canvas
+    drawCanvas = document.createElement('canvas');
+    drawCanvas.width = TW;
+    drawCanvas.height = TH;
+
+    if (currentTool === 'pen' || currentTool === 'eraser') {
+      const dc = drawCanvas.getContext('2d');
+      dc.strokeStyle = currentTool === 'eraser' ? 'rgba(0,0,0,1)' : drawColor;
+      dc.lineWidth = drawSize;
+      dc.lineCap = 'round';
+      dc.lineJoin = 'round';
+      if (currentTool === 'eraser') {
+        dc.globalCompositeOperation = 'destination-out';
+      }
+      dc.beginPath();
+      dc.moveTo(mx, my);
+    }
+    render();
+  }
+};
+
+canvas.onmousemove = e => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) / zoom;
+  const my = (e.clientY - rect.top) / zoom;
+
+  // ─── SELECT TOOL DRAG ───
+  if (currentTool === 'select') {
+    if (!dragging) {
+      const sel = getSelected();
+      if (sel && sel.img) {
+        const rh = getRotHandlePos(sel);
+        if (ptDist({x:mx,y:my}, rh) < 14/zoom) {
+          canvas.style.cursor = 'grab';
+          return;
+        }
+      }
+      canvas.style.cursor = 'crosshair';
+      return;
+    }
+
+    if (dragMode === 'move') {
+      dragging.x = layerStart.x + (mx - dragStart.x);
+      dragging.y = layerStart.y + (my - dragStart.y);
+    } else if (dragMode === 'rotate') {
+      const c = getLayerCenter(dragging);
+      const angle = Math.atan2(mx - c.x, -(my - c.y)) * 180 / Math.PI;
+      let newRot = angle - rotStartAngle;
+      const snaps = [-180,-135,-90,-45,0,45,90,135,180];
+      for (const s of snaps) {
+        if (Math.abs(newRot - s) < 3) { newRot = s; break; }
+      }
+      dragging.rotation = newRot;
+    } else if (dragMode === 'resize') {
+      const c = getLayerCenter(dragging);
+      const d = ptDist({x:mx,y:my}, c);
+      const ratio = d / resizeStartDist;
+      dragging.scale = Math.max(0.01, resizeStartScale * ratio);
+      const w = dragging.img.width * dragging.scale;
+      const h = dragging.img.height * dragging.scale;
+      dragging.x = c.x - w/2;
+      dragging.y = c.y - h/2;
+    }
+    render();
+    if (dragMode === 'rotate' || dragMode === 'resize') updateUI();
+    return;
+  }
+
+  // ─── DRAWING TOOLS DRAG ───
+  if (isDrawing && drawCanvas) {
+    const dc = drawCanvas.getContext('2d');
+
+    if (currentTool === 'pen' || currentTool === 'eraser') {
+      drawPoints.push({x:mx, y:my});
+      dc.lineTo(mx, my);
+      dc.stroke();
+    } else {
+      // Clear and redraw shape preview
+      dc.clearRect(0, 0, TW, TH);
+      dc.strokeStyle = drawColor;
+      dc.fillStyle = drawColor;
+      dc.lineWidth = drawSize;
+      dc.lineCap = 'round';
+
+      if (currentTool === 'line') {
+        dc.beginPath();
+        dc.moveTo(drawStartX, drawStartY);
+        dc.lineTo(mx, my);
+        dc.stroke();
+      } else if (currentTool === 'rect') {
+        const rx = Math.min(drawStartX, mx);
+        const ry = Math.min(drawStartY, my);
+        const rw = Math.abs(mx - drawStartX);
+        const rh = Math.abs(my - drawStartY);
+        if (drawFill) dc.fillRect(rx, ry, rw, rh);
+        else dc.strokeRect(rx, ry, rw, rh);
+      } else if (currentTool === 'circle') {
+        const cx = (drawStartX + mx) / 2;
+        const cy = (drawStartY + my) / 2;
+        const rx = Math.abs(mx - drawStartX) / 2;
+        const ry = Math.abs(my - drawStartY) / 2;
+        dc.beginPath();
+        dc.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+        if (drawFill) dc.fill();
+        else dc.stroke();
+      }
+    }
+    render();
+  }
+};
+
+canvas.onmouseup = e => {
+  // ─── SELECT TOOL ───
+  if (currentTool === 'select') {
+    dragging = null;
+    dragMode = null;
+    canvas.style.cursor = 'crosshair';
+    return;
+  }
+
+  // ─── DRAWING TOOLS ───
+  if (isDrawing && drawCanvas) {
+    const dc = drawCanvas.getContext('2d');
+
+    // Finalize shape drawing
+    if (currentTool === 'pen') {
+      dc.stroke();
+    }
+
+    // Check if anything was drawn
+    const imgData = dc.getImageData(0, 0, TW, TH);
+    let hasContent = false;
+    for (let i = 3; i < imgData.data.length; i += 4) {
+      if (imgData.data[i] > 0) { hasContent = true; break; }
+    }
+
+    if (hasContent) {
+      if (currentTool === 'eraser') {
+        // Apply eraser to all layers - create eraser mask and apply
+        // For simplicity, add as a special erase layer that composites
+        addDrawingLayer(drawCanvas, 'Eraser stroke');
+      } else {
+        addDrawingLayer(drawCanvas, currentTool.charAt(0).toUpperCase() + currentTool.slice(1) + ' drawing');
+      }
+    }
+
+    drawCanvas = null;
+    isDrawing = false;
+    drawPoints = [];
+    render();
+  }
+};
+
+canvas.onmouseleave = () => {
+  if (currentTool === 'select') {
+    dragging = null;
+    dragMode = null;
+    canvas.style.cursor = 'crosshair';
+  }
+};
+
+// Mouse wheel = scale selected layer (select tool) or brush size (draw tools)
+canvas.onwheel = e => {
+  e.preventDefault();
+  if (currentTool === 'select') {
+    const sel = getSelected();
+    if (sel) {
+      const delta = e.deltaY > 0 ? 0.95 : 1.05;
+      sel.scale = Math.max(0.01, sel.scale * delta);
+      updateUI(); render();
+    }
+  } else {
+    // Adjust brush size
+    drawSize = Math.max(1, Math.min(50, drawSize + (e.deltaY > 0 ? -1 : 1)));
+    document.getElementById('drawSize').value = drawSize;
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+// TOOLBAR ACTIONS
+// ═══════════════════════════════════════════════════════════
+document.getElementById('btnFitFront').onclick = () => {
+  const sel = getSelected(); if (!sel) return;
+  saveUndo();
+  const r = SHIRT_REGIONS.torso_front;
+  sel.scale = Math.min(r.w / sel.img.width, r.h / sel.img.height) * 0.9;
+  sel.x = r.x + (r.w - sel.img.width * sel.scale) / 2;
+  sel.y = r.y + (r.h - sel.img.height * sel.scale) / 2;
+  sel.rotation = 0;
+  render();
+};
+
+document.getElementById('btnFitFB').onclick = () => {
+  const sel = getSelected(); if (!sel) return;
+  saveUndo();
+  const front = SHIRT_REGIONS.torso_front;
+  const back = SHIRT_REGIONS.torso_back;
+  sel.scale = Math.min(front.w / sel.img.width, front.h / sel.img.height) * 0.9;
+  sel.x = front.x + (front.w - sel.img.width * sel.scale) / 2;
+  sel.y = front.y + (front.h - sel.img.height * sel.scale) / 2;
+  sel.rotation = 0;
+  const clone = {...sel, id: nextId++, name: sel.name + ' (back)',
+    x: back.x + (back.w - sel.img.width * sel.scale) / 2,
+    y: back.y + (back.h - sel.img.height * sel.scale) / 2,
+    img: sel.img};
+  layers.push(clone);
+  updateUI(); render();
+};
+
+document.getElementById('btnAllover').onclick = () => {
+  const sel = getSelected(); if (!sel) return;
+  saveUndo();
+  for (const r of Object.values(SHIRT_REGIONS)) {
+    const sc = Math.min(r.w / sel.img.width, r.h / sel.img.height) * 0.8;
+    layers.push({...sel, id:nextId++, name:sel.name+' tile', scale:sc,
+      x:r.x+(r.w-sel.img.width*sc)/2, y:r.y+(r.h-sel.img.height*sc)/2, rotation:0, img:sel.img});
+  }
+  updateUI(); render();
+};
+
+document.getElementById('btnScatter').onclick = () => {
+  const sel = getSelected(); if (!sel) return;
+  saveUndo();
+  for (const r of Object.values(SHIRT_REGIONS)) {
+    const count = r.w > 100 ? 3 : 1;
+    for (let i = 0; i < count; i++) {
+      const sc = (Math.random() * 0.3 + 0.15) * Math.min(r.w, r.h) / Math.max(sel.img.width, sel.img.height);
+      layers.push({...sel, id:nextId++, name:sel.name+' scat', scale:Math.max(0.02,sc),
+        x:r.x+Math.random()*(r.w*0.7), y:r.y+Math.random()*(r.h*0.7),
+        rotation:Math.random()*60-30, img:sel.img});
+    }
+  }
+  updateUI(); render();
+};
+
+document.getElementById('btnStretch').onclick = () => {
+  const sel = getSelected(); if (!sel) return;
+  saveUndo();
+  const combined_w = 260, combined_h = 128;
+  sel.scale = Math.min(combined_w / sel.img.width, combined_h / sel.img.height);
+  sel.x = 165 + (combined_w - sel.img.width * sel.scale) / 2;
+  sel.y = 74 + (combined_h - sel.img.height * sel.scale) / 2;
+  sel.rotation = 0;
+  const back = SHIRT_REGIONS.torso_back;
+  const bscale = Math.min(back.w / sel.img.width, back.h / sel.img.height);
+  layers.push({...sel, id:nextId++, name:sel.name+' (back)', scale:bscale,
+    x:back.x+(back.w-sel.img.width*bscale)/2, y:back.y+(back.h-sel.img.height*bscale)/2, img:sel.img});
+  updateUI(); render();
+};
+
+document.getElementById('btnClear').onclick = () => { saveUndo(); layers = []; selectedLayerId = null; updateUI(); render(); };
+
+// Undo
+function saveUndo() { undoStack.push(JSON.stringify(layers.map(l => ({...l, imgSrc: l.img.src})))); if (undoStack.length > 30) undoStack.shift(); }
+document.getElementById('btnUndo').onclick = () => {
+  if (!undoStack.length) return;
+  const data = JSON.parse(undoStack.pop());
+  layers = [];
+  let loaded = 0;
+  if (data.length === 0) { selectedLayerId = null; updateUI(); render(); return; }
+  data.forEach(d => {
+    const img = new Image();
+    img.onload = () => {
+      d.img = img;
+      delete d.imgSrc;
+      layers.push(d);
+      loaded++;
+      if (loaded === data.length) { updateUI(); render(); }
+    };
+    img.src = d.imgSrc;
+  });
+};
+
+// Zoom
+document.getElementById('zoomIn').onclick = () => { zoom = Math.min(3, zoom + 0.25); document.getElementById('zoomLevel').textContent = (zoom*100)+'%'; render(); };
+document.getElementById('zoomOut').onclick = () => { zoom = Math.max(0.25, zoom - 0.25); document.getElementById('zoomLevel').textContent = (zoom*100)+'%'; render(); };
+
+// Checkboxes
+document.getElementById('showMask').onchange = e => { showMask = e.target.checked; render(); };
+document.getElementById('showGrid').onchange = e => { showGrid = e.target.checked; render(); };
+
+// ═══════════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════════
+function exportPNG() {
+  const exp = document.createElement('canvas');
+  exp.width = TW; exp.height = TH;
+  const ec = exp.getContext('2d');
+
+  ec.clearRect(0, 0, TW, TH);
+  if (bgImage) {
+    ec.globalAlpha = bgOpacity;
+    ec.drawImage(bgImage, 0, 0, TW, TH);
+    ec.globalAlpha = 1;
+  } else if (bgColor !== 'transparent' && bgColor !== '') {
+    ec.fillStyle = bgColor;
+    ec.globalAlpha = bgOpacity;
+    ec.fillRect(0, 0, TW, TH);
+    ec.globalAlpha = 1;
+  }
+
+  for (const [rName, color] of Object.entries(regionColors)) {
+    const r = SHIRT_REGIONS[rName];
+    if (r && color) { ec.fillStyle = color; ec.fillRect(r.x, r.y, r.w, r.h); }
+  }
+
+  for (const layer of layers) {
+    if (!layer.visible || !layer.img) continue;
+    ec.save();
+    ec.globalAlpha = layer.opacity;
+    const cx = layer.x + (layer.img.width * layer.scale) / 2;
+    const cy = layer.y + (layer.img.height * layer.scale) / 2;
+    ec.translate(cx, cy);
+    ec.rotate(layer.rotation * Math.PI / 180);
+    if (layer.flipH) ec.scale(-1, 1);
+    if (layer.flipV) ec.scale(1, -1);
+    const w = layer.img.width * layer.scale;
+    const h = layer.img.height * layer.scale;
+    ec.drawImage(layer.img, -w/2, -h/2, w, h);
+    ec.restore();
+  }
+
+  ec.globalCompositeOperation = 'destination-in';
+  ec.drawImage(maskCanvas, 0, 0);
+  ec.globalCompositeOperation = 'source-over';
+
+  const link = document.createElement('a');
+  const title = document.getElementById('exportTitle').value || 'roblox_shirt';
+  link.download = title.replace(/[^a-zA-Z0-9_-]/g, '_') + '_roblox.png';
+  link.href = exp.toDataURL('image/png');
+  link.click();
+}
+document.getElementById('btnExport').onclick = exportPNG;
+document.getElementById('btnExport2').onclick = exportPNG;
+
+// ═══════════════════════════════════════════════════════════
+// REGION GRID (dynamic — rebuilds on mode switch)
+// ═══════════════════════════════════════════════════════════
+const regionGrid = document.getElementById('regionGrid');
+let regionColors = {};
+let regionColorPicker = document.createElement('input');
+regionColorPicker.type = 'color';
+regionColorPicker.style.display = 'none';
+document.body.appendChild(regionColorPicker);
+
+function buildRegionGrid() {
+  const isShirt = currentMode === 'Shirt';
+  const bodyPrefix = isShirt ? 'torso' : 'waist';
+  const limbPrefix1 = isShirt ? 'rarm' : 'rleg';
+  const limbPrefix2 = isShirt ? 'larm' : 'lleg';
+  const limbLabel1 = isShirt ? 'Right Arm' : 'Right Leg';
+  const limbLabel2 = isShirt ? 'Left Arm' : 'Left Leg';
+  const bodyLabel = isShirt ? 'Torso' : 'Waist';
+
+  regionGrid.innerHTML = `
+  <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:2px;">
+    <div></div><div></div><div class="region-btn" data-r="${bodyPrefix}_up">Top</div><div></div><div></div>
+    <div></div><div class="region-btn" data-r="${bodyPrefix}_right">R</div><div class="region-btn" data-r="${bodyPrefix}_front" style="background:#2a1040">Front</div><div class="region-btn" data-r="${bodyPrefix}_left">L</div><div class="region-btn" data-r="${bodyPrefix}_back">Back</div>
+    <div></div><div></div><div class="region-btn" data-r="${bodyPrefix}_down">Bot</div><div></div><div></div>
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-top:4px;">
+    <div>
+      <div style="font-size:9px;color:#666;text-align:center">${limbLabel1}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:1px">
+        <div class="region-btn" data-r="${limbPrefix1}_left">L</div>
+        <div class="region-btn" data-r="${limbPrefix1}_back">Bk</div>
+        <div class="region-btn" data-r="${limbPrefix1}_right">R</div>
+        <div class="region-btn" data-r="${limbPrefix1}_front">Fr</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:9px;color:#666;text-align:center">${limbLabel2}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:1px">
+        <div class="region-btn" data-r="${limbPrefix2}_front">Fr</div>
+        <div class="region-btn" data-r="${limbPrefix2}_left">L</div>
+        <div class="region-btn" data-r="${limbPrefix2}_back">Bk</div>
+        <div class="region-btn" data-r="${limbPrefix2}_right">R</div>
+      </div>
+    </div>
+  </div>`;
+
+  // Re-bind click handlers
+  regionGrid.querySelectorAll('.region-btn').forEach(btn => {
+    // Restore saved region color if any
+    const rName = btn.dataset.r;
+    if (regionColors[rName]) {
+      btn.style.background = regionColors[rName];
+      btn.classList.add('filled');
+    }
+
+    btn.onclick = () => {
+      const sel = getSelected();
+      if (sel) {
+        const r = SHIRT_REGIONS[rName];
+        if (!r) return;
+        saveUndo();
+        sel.scale = Math.min(r.w / sel.img.width, r.h / sel.img.height) * 0.85;
+        sel.x = r.x + (r.w - sel.img.width * sel.scale) / 2;
+        sel.y = r.y + (r.h - sel.img.height * sel.scale) / 2;
+        sel.rotation = 0;
+        render();
+      } else {
+        regionColorPicker.value = regionColors[rName] || bgColor;
+        regionColorPicker.oninput = ev => {
+          regionColors[rName] = ev.target.value;
+          btn.style.background = ev.target.value;
+          btn.classList.add('filled');
+          render();
+        };
+        regionColorPicker.click();
+      }
+    };
+
+    btn.oncontextmenu = e => {
+      e.preventDefault();
+      delete regionColors[rName];
+      btn.style.background = '';
+      btn.classList.remove('filled');
+      render();
+    };
+  });
+}
+buildRegionGrid();
+
+// ═══════════════════════════════════════════════════════════
+// MODE SWITCH: SHIRT <-> PANTS
+// ═══════════════════════════════════════════════════════════
+const modeBtn = document.getElementById('btnModeToggle');
+const assetTypeSelect = document.getElementById('assetType');
+
+function switchMode(mode) {
+  currentMode = mode;
+  assetTypeSelect.value = mode;
+
+  // Swap active regions
+  if (mode === 'Pants') {
+    SHIRT_REGIONS = {...PANTS_REGION_DATA};
+    modeBtn.textContent = 'PANTS';
+    modeBtn.style.background = 'linear-gradient(135deg,#00e5ff,#7c4dff)';
+  } else {
+    SHIRT_REGIONS = {...SHIRT_REGION_DATA};
+    modeBtn.textContent = 'SHIRT';
+    modeBtn.style.background = 'linear-gradient(135deg,#e040fb,#7c4dff)';
+  }
+
+  // Clear region colors (they use different keys)
+  regionColors = {};
+
+  // Rebuild mask and region grid
+  buildMask();
+  buildRegionGrid();
+  render();
+}
+
+modeBtn.onclick = () => {
+  switchMode(currentMode === 'Shirt' ? 'Pants' : 'Shirt');
+};
+
+// ═══════════════════════════════════════════════════════════
+// PRESETS
+// ═══════════════════════════════════════════════════════════
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.onclick = () => {
+    const sel = getSelected(); if (!sel) return;
+    const preset = btn.dataset.preset;
+    saveUndo();
+
+    if (preset === 'meme') {
+      document.getElementById('btnFitFront').click();
+    } else if (preset === 'allover') {
+      document.getElementById('btnAllover').click();
+    } else if (preset === 'sleeve-pop') {
+      const arms = ['rarm_front','rarm_back','rarm_left','rarm_right','larm_front','larm_back','larm_left','larm_right'];
+      arms.forEach(rn => {
+        const r = SHIRT_REGIONS[rn];
+        const sc = Math.min(r.w/sel.img.width, r.h/sel.img.height)*0.8;
+        layers.push({...sel, id:nextId++, name:sel.name+' sleeve', scale:sc,
+          x:r.x+(r.w-sel.img.width*sc)/2, y:r.y+(r.h-sel.img.height*sc)/2, rotation:0, img:sel.img});
+      });
+      updateUI(); render();
+    } else if (preset === 'mirror') {
+      document.getElementById('btnFitFB').click();
+    } else if (preset === 'scattered') {
+      document.getElementById('btnScatter').click();
+    } else if (preset === 'fullbleed') {
+      sel.scale = Math.max(TW/sel.img.width, TH/sel.img.height);
+      sel.x = (TW - sel.img.width*sel.scale)/2;
+      sel.y = (TH - sel.img.height*sel.scale)/2;
+      sel.rotation = 0;
+      updateUI(); render();
+    }
+  };
+});
+
+// ═══════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS (with toggle)
+// ═══════════════════════════════════════════════════════════
+let keyboardShortcutsEnabled = true;
+const toggleBtn = document.getElementById('btnToggleKeys');
+toggleBtn.onclick = () => {
+  keyboardShortcutsEnabled = !keyboardShortcutsEnabled;
+  toggleBtn.textContent = keyboardShortcutsEnabled ? 'Keys: ON' : 'Keys: OFF';
+  toggleBtn.style.background = keyboardShortcutsEnabled ? '#2d4a2d' : '#4a2d2d';
+  toggleBtn.style.color = keyboardShortcutsEnabled ? '#7fff7f' : '#ff7f7f';
+};
+
+document.onkeydown = e => {
+  // Always allow shortcuts to be toggled, and always skip when typing in inputs/textareas
+  if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'TEXTAREA') return;
+  if (!keyboardShortcutsEnabled) return;
+
+  // Tool shortcuts
+  switch(e.key.toLowerCase()) {
+    case 'v': setTool('select'); e.preventDefault(); return;
+    case 'b': setTool('pen'); e.preventDefault(); return;
+    case 'l': setTool('line'); e.preventDefault(); return;
+    case 'u': setTool('rect'); e.preventDefault(); return;
+    case 'o': setTool('circle'); e.preventDefault(); return;
+    case 'e': if (!e.ctrlKey) { setTool('eraser'); e.preventDefault(); return; } break;
+    case 'd': if (e.ctrlKey) { e.preventDefault(); const sel = getSelected(); if (sel) duplicateLayer(sel.id); return; } break;
+  }
+
+  const sel = getSelected();
+  if (!sel) return;
+  const step = e.shiftKey ? 10 : 1;
+  const rotStep = e.shiftKey ? 15 : 5;
+  switch(e.key) {
+    case 'ArrowLeft': sel.x -= step; render(); e.preventDefault(); break;
+    case 'ArrowRight': sel.x += step; render(); e.preventDefault(); break;
+    case 'ArrowUp': sel.y -= step; render(); e.preventDefault(); break;
+    case 'ArrowDown': sel.y += step; render(); e.preventDefault(); break;
+    case '[': case '{':
+      sel.rotation = ((sel.rotation - rotStep + 180) % 360) - 180;
+      updateUI(); render(); e.preventDefault(); break;
+    case ']': case '}':
+      sel.rotation = ((sel.rotation + rotStep + 180) % 360) - 180;
+      updateUI(); render(); e.preventDefault(); break;
+    case 'r': case 'R':
+      sel.rotation = 0; updateUI(); render(); e.preventDefault(); break;
+    case '+': case '=':
+      sel.scale = Math.min(5, sel.scale * 1.1); updateUI(); render(); e.preventDefault(); break;
+    case '-': case '_':
+      sel.scale = Math.max(0.01, sel.scale * 0.9); updateUI(); render(); e.preventDefault(); break;
+    case 'Delete': case 'Backspace':
+      removeLayer(sel.id); e.preventDefault(); break;
+  }
+  if (e.ctrlKey && e.key === 'z') { document.getElementById('btnUndo').click(); e.preventDefault(); }
+};
+
+// ═══════════════════════════════════════════════════════════
+// CLOTHING DETAIL PIECES (collar, cuffs, seams, etc.)
+// ═══════════════════════════════════════════════════════════
+function createDetailLayer(name, drawFn) {
+  saveUndo();
+  const dc = document.createElement('canvas');
+  dc.width = TW; dc.height = TH;
+  const c = dc.getContext('2d');
+
+  const color = document.getElementById('detailColor').value;
+  const width = +document.getElementById('detailWidth').value;
+  const dashed = document.getElementById('detailDash').checked;
+
+  c.strokeStyle = color;
+  c.fillStyle = color;
+  c.lineWidth = width;
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  if (dashed) c.setLineDash([width * 2, width * 2]);
+
+  drawFn(c);
+
+  // Auto-crop to actual drawn pixels so bounding box is tight but grabbable
+  const imgData = c.getImageData(0, 0, TW, TH);
+  let minX = TW, minY = TH, maxX = 0, maxY = 0;
+  for (let y = 0; y < TH; y++) {
+    for (let x = 0; x < TW; x++) {
+      if (imgData.data[(y * TW + x) * 4 + 3] > 0) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  // Comfortable grab padding (min 10px each side)
+  const pad = 10;
+  minX = Math.max(0, minX - pad);
+  minY = Math.max(0, minY - pad);
+  maxX = Math.min(TW - 1, maxX + pad);
+  maxY = Math.min(TH - 1, maxY + pad);
+  const cropW = maxX - minX + 1;
+  const cropH = maxY - minY + 1;
+
+  // Create cropped canvas
+  const cropped = document.createElement('canvas');
+  cropped.width = cropW;
+  cropped.height = cropH;
+  cropped.getContext('2d').drawImage(dc, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+
+  const img = new Image();
+  img.onload = () => {
+    const layer = {
+      id: nextId++, name: name,
+      img, visible: true, opacity: 1,
+      x: minX, y: minY, scale: 1, rotation: 0,
+      flipH: false, flipV: false,
+    };
+    layers.push(layer);
+    selectedLayerId = layer.id;
+    setTool('select');
+    updateUI(); render();
+  };
+  img.src = cropped.toDataURL();
+}
+
+const DETAIL_GENERATORS = {
+  'collar-v': (c) => {
+    const f = SHIRT_REGIONS.torso_front;
+    const cx = f.x + f.w / 2;
+    const top = f.y;
+    c.beginPath();
+    c.moveTo(cx - 30, top);
+    c.lineTo(cx, top + 28);
+    c.lineTo(cx + 30, top);
+    c.stroke();
+  },
+  'collar-crew': (c) => {
+    const f = SHIRT_REGIONS.torso_front;
+    const cx = f.x + f.w / 2;
+    const top = f.y;
+    c.beginPath();
+    c.moveTo(cx - 32, top);
+    c.quadraticCurveTo(cx - 32, top + 16, cx, top + 18);
+    c.quadraticCurveTo(cx + 32, top + 16, cx + 32, top);
+    c.stroke();
+    // Back collar too
+    const b = SHIRT_REGIONS.torso_back;
+    const bcx = b.x + b.w / 2;
+    c.beginPath();
+    c.moveTo(bcx - 28, b.y);
+    c.quadraticCurveTo(bcx, b.y + 10, bcx + 28, b.y);
+    c.stroke();
+  },
+  'collar-scoop': (c) => {
+    const f = SHIRT_REGIONS.torso_front;
+    const cx = f.x + f.w / 2;
+    const top = f.y;
+    c.beginPath();
+    c.moveTo(cx - 38, top);
+    c.quadraticCurveTo(cx, top + 32, cx + 38, top);
+    c.stroke();
+  },
+  'collar-henley': (c) => {
+    // Crew neck with center button placket
+    DETAIL_GENERATORS['collar-crew'](c);
+    const f = SHIRT_REGIONS.torso_front;
+    const cx = f.x + f.w / 2;
+    const top = f.y + 18;
+    // Short placket line
+    c.beginPath();
+    c.moveTo(cx, top);
+    c.lineTo(cx, top + 30);
+    c.stroke();
+    // Buttons
+    const r = c.lineWidth;
+    for (let i = 0; i < 3; i++) {
+      c.beginPath();
+      c.arc(cx, top + 6 + i * 10, r, 0, Math.PI * 2);
+      c.fill();
+    }
+  },
+  'cuff-left': (c) => {
+    const r = SHIRT_REGIONS.larm_front;
+    const bot = r.y + r.h;
+    // Draw cuff line across all left arm faces
+    ['larm_front','larm_left','larm_back','larm_right'].forEach(rn => {
+      const reg = SHIRT_REGIONS[rn];
+      c.beginPath();
+      c.moveTo(reg.x, reg.y + reg.h - 8);
+      c.lineTo(reg.x + reg.w, reg.y + reg.h - 8);
+      c.stroke();
+    });
+  },
+  'cuff-right': (c) => {
+    ['rarm_front','rarm_left','rarm_back','rarm_right'].forEach(rn => {
+      const reg = SHIRT_REGIONS[rn];
+      c.beginPath();
+      c.moveTo(reg.x, reg.y + reg.h - 8);
+      c.lineTo(reg.x + reg.w, reg.y + reg.h - 8);
+      c.stroke();
+    });
+  },
+  'cuffs-both': (c) => {
+    DETAIL_GENERATORS['cuff-left'](c);
+    DETAIL_GENERATORS['cuff-right'](c);
+  },
+  'hem': (c) => {
+    // Bottom hem line on torso
+    const d = SHIRT_REGIONS.torso_down;
+    const regions = ['torso_right','torso_front','torso_left'];
+    regions.forEach(rn => {
+      const r = SHIRT_REGIONS[rn];
+      c.beginPath();
+      c.moveTo(r.x, r.y + r.h - 4);
+      c.lineTo(r.x + r.w, r.y + r.h - 4);
+      c.stroke();
+    });
+    // Back hem
+    const b = SHIRT_REGIONS.torso_back;
+    c.beginPath();
+    c.moveTo(b.x, b.y + b.h - 4);
+    c.lineTo(b.x + b.w, b.y + b.h - 4);
+    c.stroke();
+  },
+  'seam-center': (c) => {
+    const f = SHIRT_REGIONS.torso_front;
+    const cx = f.x + f.w / 2;
+    c.beginPath();
+    c.moveTo(cx, f.y);
+    c.lineTo(cx, f.y + f.h);
+    c.stroke();
+  },
+  'seam-sides': (c) => {
+    // Left edge of front + right edge of front (side seams)
+    const f = SHIRT_REGIONS.torso_front;
+    c.beginPath();
+    c.moveTo(f.x, f.y);
+    c.lineTo(f.x, f.y + f.h);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(f.x + f.w, f.y);
+    c.lineTo(f.x + f.w, f.y + f.h);
+    c.stroke();
+    // Back side seams
+    const b = SHIRT_REGIONS.torso_back;
+    c.beginPath();
+    c.moveTo(b.x, b.y);
+    c.lineTo(b.x, b.y + b.h);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(b.x + b.w, b.y);
+    c.lineTo(b.x + b.w, b.y + b.h);
+    c.stroke();
+  },
+  'pocket': (c) => {
+    const f = SHIRT_REGIONS.torso_front;
+    // Small pocket on the left chest area
+    const px = f.x + f.w * 0.62;
+    const py = f.y + f.h * 0.25;
+    const pw = 22, ph = 24;
+    c.beginPath();
+    c.moveTo(px, py);
+    c.lineTo(px, py + ph);
+    c.lineTo(px + pw, py + ph);
+    c.lineTo(px + pw, py);
+    c.stroke();
+  },
+  'placket': (c) => {
+    const f = SHIRT_REGIONS.torso_front;
+    const cx = f.x + f.w / 2;
+    // Full button line
+    c.beginPath();
+    c.moveTo(cx, f.y + 4);
+    c.lineTo(cx, f.y + f.h - 4);
+    c.stroke();
+    // Parallel line
+    c.beginPath();
+    c.moveTo(cx + 5, f.y + 4);
+    c.lineTo(cx + 5, f.y + f.h - 4);
+    c.stroke();
+    // Buttons
+    const r = Math.max(1.5, c.lineWidth * 0.8);
+    const spacing = (f.h - 16) / 6;
+    for (let i = 0; i < 7; i++) {
+      c.beginPath();
+      c.arc(cx + 2.5, f.y + 8 + i * spacing, r, 0, Math.PI * 2);
+      c.fill();
+    }
+  },
+  'shoulder-stripe': (c) => {
+    // Stripe across shoulder/top panel and arm tops
+    const tu = SHIRT_REGIONS.torso_up;
+    const mid = tu.y + tu.h / 2;
+    c.beginPath();
+    c.moveTo(tu.x, mid);
+    c.lineTo(tu.x + tu.w, mid);
+    c.stroke();
+    // Arm up panels
+    ['rarm_up','larm_up'].forEach(rn => {
+      const r = SHIRT_REGIONS[rn];
+      const rm = r.y + r.h / 2;
+      c.beginPath();
+      c.moveTo(r.x, rm);
+      c.lineTo(r.x + r.w, rm);
+      c.stroke();
+    });
+  },
+  'arm-bands': (c) => {
+    // Band around middle of each arm
+    ['rarm_front','rarm_back','rarm_left','rarm_right','larm_front','larm_back','larm_left','larm_right'].forEach(rn => {
+      const r = SHIRT_REGIONS[rn];
+      const mid = r.y + r.h * 0.35;
+      c.beginPath();
+      c.moveTo(r.x, mid);
+      c.lineTo(r.x + r.w, mid);
+      c.stroke();
+    });
+  },
+  'yoke': (c) => {
+    // Horizontal line across back torso upper area
+    const b = SHIRT_REGIONS.torso_back;
+    const y = b.y + b.h * 0.22;
+    c.beginPath();
+    c.moveTo(b.x, y);
+    c.lineTo(b.x + b.w, y);
+    c.stroke();
+  },
+  'full-detail': (c) => {
+    DETAIL_GENERATORS['collar-crew'](c);
+    DETAIL_GENERATORS['hem'](c);
+    DETAIL_GENERATORS['cuffs-both'](c);
+    DETAIL_GENERATORS['seam-sides'](c);
+  },
+};
+
+document.querySelectorAll('.detail-btn').forEach(btn => {
+  btn.onclick = () => {
+    const detail = btn.dataset.detail;
+    const gen = DETAIL_GENERATORS[detail];
+    if (gen) {
+      const names = {
+        'collar-v': 'V-Neck Collar',
+        'collar-crew': 'Crew Neck',
+        'collar-scoop': 'Scoop Neck',
+        'collar-henley': 'Henley Collar',
+        'cuff-left': 'Left Cuff',
+        'cuff-right': 'Right Cuff',
+        'cuffs-both': 'Both Cuffs',
+        'hem': 'Hem Line',
+        'seam-center': 'Center Seam',
+        'seam-sides': 'Side Seams',
+        'pocket': 'Chest Pocket',
+        'placket': 'Button Placket',
+        'shoulder-stripe': 'Shoulder Stripe',
+        'arm-bands': 'Arm Bands',
+        'yoke': 'Back Yoke',
+        'full-detail': 'Full Detail Set',
+      };
+      createDetailLayer(names[detail] || detail, gen);
+    }
+  };
+});
+
+// ═══════════════════════════════════════════════════════════
+// WORD ART GENERATOR
+// ═══════════════════════════════════════════════════════════
+let waStyle = 'solid';
+
+// Style buttons
+document.querySelectorAll('.wordart-style-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.wordart-style-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    waStyle = btn.dataset.style;
+    updateWordArtPreview();
+  };
+});
+
+function renderWordArt(targetCanvas, maxW, maxH) {
+  const text = document.getElementById('waText').value || 'TEXT';
+  const fontFamily = document.getElementById('waFont').value;
+  const fillColor = document.getElementById('waColor').value;
+  const strokeColor = document.getElementById('waStroke').value;
+  const fontSize = +document.getElementById('waSize').value || 64;
+  const strokeW = +document.getElementById('waStrokeW').value;
+  const color2 = document.getElementById('waColor2').value;
+  const angle = (+document.getElementById('waAngle').value) * Math.PI / 180;
+
+  const tc = targetCanvas.getContext('2d');
+  const font = `900 ${fontSize}px "${fontFamily}", sans-serif`;
+  tc.font = font;
+
+  // Measure text (handle multiline)
+  const lines = text.split('\n');
+  const lineHeight = fontSize * 1.15;
+  let totalW = 0;
+  lines.forEach(line => {
+    const m = tc.measureText(line);
+    if (m.width > totalW) totalW = m.width;
+  });
+  const totalH = lines.length * lineHeight;
+
+  // Pad for effects
+  const pad = Math.max(strokeW * 2, waStyle === 'neon' ? 30 : 10, waStyle === 'shadow' ? 15 : 0, waStyle === 'retro' ? 12 : 0);
+  const cw = Math.ceil(totalW + pad * 2);
+  const ch = Math.ceil(totalH + pad * 2);
+
+  targetCanvas.width = maxW ? Math.min(cw, maxW) : cw;
+  targetCanvas.height = maxH ? Math.min(ch, maxH) : ch;
+
+  const scaleX = targetCanvas.width / cw;
+  const scaleY = targetCanvas.height / ch;
+  const sc = Math.min(scaleX, scaleY);
+
+  tc.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+  tc.save();
+  tc.scale(sc, sc);
+  tc.font = font;
+  tc.textAlign = 'center';
+  tc.textBaseline = 'middle';
+
+  const cx = cw / 2;
+  const startY = pad + lineHeight / 2;
+
+  lines.forEach((line, li) => {
+    const ty = startY + li * lineHeight;
+
+    // Create fill style
+    let fill;
+    if (waStyle === 'gradient') {
+      const gx = Math.cos(angle) * cw/2;
+      const gy = Math.sin(angle) * ch/2;
+      const grad = tc.createLinearGradient(cx - gx, ty - gy, cx + gx, ty + gy);
+      grad.addColorStop(0, fillColor);
+      grad.addColorStop(1, color2);
+      fill = grad;
+    } else {
+      fill = fillColor;
+    }
+
+    if (waStyle === 'shadow') {
+      // Drop shadow
+      tc.save();
+      tc.fillStyle = 'rgba(0,0,0,0.6)';
+      tc.fillText(line, cx + 4, ty + 4);
+      tc.restore();
+    }
+
+    if (waStyle === 'retro') {
+      // Stacked 3D effect
+      for (let i = 8; i > 0; i--) {
+        tc.fillStyle = i % 2 === 0 ? strokeColor : color2;
+        tc.fillText(line, cx + i, ty + i);
+      }
+    }
+
+    if (waStyle === 'neon') {
+      // Neon glow
+      tc.save();
+      tc.shadowColor = fillColor;
+      tc.shadowBlur = 20;
+      tc.fillStyle = fillColor;
+      tc.fillText(line, cx, ty);
+      tc.shadowBlur = 40;
+      tc.fillText(line, cx, ty);
+      tc.shadowBlur = 0;
+      tc.restore();
+      // Bright inner
+      tc.fillStyle = '#fff';
+      tc.globalAlpha = 0.8;
+      tc.fillText(line, cx, ty);
+      tc.globalAlpha = 1;
+    } else if (waStyle === 'outline') {
+      // Outline only
+      tc.strokeStyle = fillColor;
+      tc.lineWidth = strokeW || 3;
+      tc.lineJoin = 'round';
+      tc.strokeText(line, cx, ty);
+    } else {
+      // Solid / Gradient / Shadow / Retro — draw fill
+      tc.fillStyle = fill;
+      tc.fillText(line, cx, ty);
+
+      // Add stroke if width > 0
+      if (strokeW > 0) {
+        tc.strokeStyle = strokeColor;
+        tc.lineWidth = strokeW;
+        tc.lineJoin = 'round';
+        tc.strokeText(line, cx, ty);
+        // Redraw fill on top of stroke
+        tc.fillStyle = fill;
+        tc.fillText(line, cx, ty);
+      }
+    }
+  });
+
+  tc.restore();
+  return {cw, ch};
+}
+
+function updateWordArtPreview() {
+  const preview = document.getElementById('waPreview');
+  renderWordArt(preview, 200, 80);
+}
+
+// Live preview updates
+['waText','waFont','waColor','waStroke','waSize','waStrokeW','waColor2','waAngle'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('input', updateWordArtPreview);
+    el.addEventListener('change', updateWordArtPreview);
+  }
+});
+
+// Add to canvas button
+document.getElementById('btnAddWordArt').onclick = () => {
+  saveUndo();
+  // Render at full resolution
+  const fullCanvas = document.createElement('canvas');
+  fullCanvas.width = 1024;
+  fullCanvas.height = 512;
+  const {cw, ch} = renderWordArt(fullCanvas, 0, 0); // no size limit for full render
+  fullCanvas.width = cw;
+  fullCanvas.height = ch;
+  renderWordArt(fullCanvas, 0, 0);
+
+  const img = new Image();
+  img.onload = () => {
+    const text = document.getElementById('waText').value || 'TEXT';
+    const fontName = document.getElementById('waFont').value;
+    const front = SHIRT_REGIONS.torso_front;
+    const scale = Math.min(front.w / img.width, front.h / img.height) * 0.85;
+    const layer = {
+      id: nextId++,
+      name: '\u{2728} ' + text.substring(0, 20) + ' [' + fontName + ']',
+      img, visible: true, opacity: 1,
+      x: front.x + (front.w - img.width * scale) / 2,
+      y: front.y + (front.h - img.height * scale) / 2,
+      scale, rotation: 0, flipH: false, flipV: false,
+    };
+    layers.push(layer);
+    selectedLayerId = layer.id;
+    setTool('select');
+    updateUI();
+    render();
+  };
+  img.src = fullCanvas.toDataURL('image/png');
+};
+
+// Initial preview after fonts load
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(() => {
+    updateWordArtPreview();
+  });
+} else {
+  setTimeout(updateWordArtPreview, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ASSET LIBRARY — Folder Browser
+// ═══════════════════════════════════════════════════════════
+const btnLoadFolder = document.getElementById('btnLoadFolder');
+const folderInput = document.getElementById('folderInput');
+const assetBrowser = document.getElementById('assetBrowser');
+const assetGrid = document.getElementById('assetGrid');
+const assetSubfolders = document.getElementById('assetSubfolders');
+const assetCount = document.getElementById('assetCount');
+
+let allAssetFiles = [];
+let assetFolderMap = {};  // subfolder -> [files]
+let currentAssetFolder = null;
+
+btnLoadFolder.onclick = () => { folderInput.value = ''; folderInput.click(); };
+
+folderInput.onchange = e => {
+  const files = Array.from(e.target.files).filter(f =>
+    /\.(png|jpg|jpeg|gif|webp)$/i.test(f.name)
+  );
+  if (!files.length) return;
+
+  // Deduplicate by filename — keep the deepest nested version (most processed)
+  const byName = new Map();
+  files.forEach(f => {
+    const depth = (f.webkitRelativePath || '').split('/').length;
+    const existing = byName.get(f.name);
+    if (!existing || depth > existing.depth) {
+      byName.set(f.name, { file: f, depth });
+    }
+  });
+  const uniqueFiles = Array.from(byName.values()).map(v => v.file);
+
+  allAssetFiles = uniqueFiles;
+  assetFolderMap = {};
+
+  // Group by IMMEDIATE subfolder (one level deep only for cleaner UI)
+  uniqueFiles.forEach(f => {
+    const parts = f.webkitRelativePath.split('/');
+    // parts[0] = selected root, parts[1..n-1] = subfolders, parts[n] = filename
+    let folder;
+    if (parts.length <= 2) {
+      folder = '(root)';
+    } else {
+      // Use just the immediate parent folder name for grouping
+      folder = parts[parts.length - 2];
+    }
+    if (!assetFolderMap[folder]) assetFolderMap[folder] = [];
+    assetFolderMap[folder].push(f);
+  });
+
+  // Build (all) from unique files
+  assetFolderMap['(all)'] = uniqueFiles;
+
+  assetBrowser.style.display = 'block';
+
+  // Build subfolder filter buttons
+  const folders = Object.keys(assetFolderMap).sort((a, b) => {
+    if (a === '(all)') return -1;
+    if (b === '(all)') return 1;
+    if (a === '(root)') return -1;
+    if (b === '(root)') return 1;
+    return a.localeCompare(b);
+  });
+  assetSubfolders.innerHTML = '';
+  if (folders.length > 2) {
+    folders.forEach(folder => {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-sm btn-secondary';
+      btn.style.cssText = 'font-size:9px;padding:2px 6px;';
+      const count = assetFolderMap[folder].length;
+      const label = folder === '(all)' ? `All (${count})` :
+                    folder === '(root)' ? `Root (${count})` :
+                    `${folder} (${count})`;
+      btn.textContent = label;
+      btn.title = folder;
+      btn.onclick = () => showAssetFolder(folder);
+      assetSubfolders.appendChild(btn);
+    });
+  }
+
+  assetCount.textContent = `${uniqueFiles.length} unique images (${files.length - uniqueFiles.length} duplicates removed)`;
+  showAssetFolder('(all)');
+};
+
+function showAssetFolder(folder) {
+  currentAssetFolder = folder;
+  const files = assetFolderMap[folder] || [];
+
+  // Revoke old blob URLs to free memory
+  assetGrid.querySelectorAll('img').forEach(img => {
+    if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+  });
+  assetGrid.innerHTML = '';
+
+  // Highlight active folder button
+  assetSubfolders.querySelectorAll('button').forEach(btn => {
+    btn.style.background = btn.title === folder ? '#2d4a2d' : '';
+    btn.style.color = btn.title === folder ? '#7fff7f' : '';
+  });
+
+  files.forEach(file => {
+    const thumb = document.createElement('div');
+    thumb.style.cssText = 'cursor:pointer;border:1px solid #333;border-radius:4px;overflow:hidden;aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#111;position:relative;';
+    thumb.title = file.name;
+
+    const img = document.createElement('img');
+    img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;';
+    img.src = URL.createObjectURL(file);
+
+    // Name overlay
+    const nameTag = document.createElement('div');
+    nameTag.style.cssText = 'position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#ccc;font-size:7px;padding:1px 2px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;';
+    nameTag.textContent = file.name.replace(/\.(png|jpg|jpeg|gif|webp)$/i, '');
+
+    thumb.appendChild(img);
+    thumb.appendChild(nameTag);
+
+    // Click to add as layer
+    thumb.onclick = () => {
+      const reader = new FileReader();
+      reader.onload = re => {
+        const layerImg = new window.Image();
+        layerImg.onload = () => {
+          saveUndo();
+          const id = Date.now() + Math.random();
+          layers.push({
+            id, type: 'image', img: layerImg,
+            name: file.name.replace(/\.[^.]+$/, ''),
+            x: 231, y: 74,  // default to torso_front
+            scale: Math.min(128 / layerImg.width, 128 / layerImg.height),
+            rotation: 0, opacity: 1, visible: true, flipH: false, flipV: false
+          });
+          selectedLayerId = id;
+          updateUI();
+          render();
+        };
+        layerImg.src = re.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    // Right-click to add at full template size
+    thumb.oncontextmenu = ev => {
+      ev.preventDefault();
+      const reader = new FileReader();
+      reader.onload = re => {
+        const layerImg = new window.Image();
+        layerImg.onload = () => {
+          saveUndo();
+          const id = Date.now() + Math.random();
+          layers.push({
+            id, type: 'image', img: layerImg,
+            name: file.name.replace(/\.[^.]+$/, '') + ' (full)',
+            x: 0, y: 0,
+            scale: Math.max(TW / layerImg.width, TH / layerImg.height),
+            rotation: 0, opacity: 1, visible: true, flipH: false, flipV: false
+          });
+          selectedLayerId = id;
+          updateUI();
+          render();
+        };
+        layerImg.src = re.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    assetGrid.appendChild(thumb);
+  });
+
+  assetCount.textContent = `${files.length} images in ${folder === '(all)' ? 'all folders' : folder}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SAVE / LOAD PROJECT (JSON with full layer data)
+// ═══════════════════════════════════════════════════════════
+function saveProject() {
+  const project = {
+    version: '3.0',
+    app: 'Conundrum R15 Editor',
+    savedAt: new Date().toISOString(),
+    mode: currentMode,
+    bgColor,
+    bgOpacity,
+    bgImageSrc: bgImage ? bgImage.src : null,
+    regionColors: {...regionColors},
+    showMask,
+    showGrid,
+    layers: layers.map(l => ({
+      id: l.id,
+      name: l.name,
+      visible: l.visible,
+      opacity: l.opacity,
+      x: l.x,
+      y: l.y,
+      scale: l.scale,
+      rotation: l.rotation,
+      flipH: l.flipH,
+      flipV: l.flipV,
+      imgSrc: l.img ? l.img.src : null,
+    })),
+  };
+  const json = JSON.stringify(project, null, 2);
+  const blob = new Blob([json], {type: 'application/json'});
+  const link = document.createElement('a');
+  const title = document.getElementById('exportTitle').value || 'untitled';
+  link.download = title.replace(/[^a-zA-Z0-9_-]/g, '_') + '.r15proj';
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+function loadProject(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const project = JSON.parse(ev.target.result);
+      // Restore mode
+      if (project.mode) switchMode(project.mode);
+      // Restore background
+      bgColor = project.bgColor || '#1a1a2e';
+      bgOpacity = project.bgOpacity != null ? project.bgOpacity : 1;
+      document.getElementById('bgColor').value = bgColor;
+      document.getElementById('bgOpacity').value = bgOpacity * 100;
+
+      if (project.bgImageSrc) {
+        const bimg = new Image();
+        bimg.onload = () => { bgImage = bimg; render(); };
+        bimg.src = project.bgImageSrc;
+      } else {
+        bgImage = null;
+      }
+
+      // Restore region colors
+      regionColors = project.regionColors || {};
+      document.querySelectorAll('.region-btn').forEach(btn => {
+        const rName = btn.dataset.r;
+        if (regionColors[rName]) {
+          btn.style.background = regionColors[rName];
+          btn.classList.add('filled');
+        } else {
+          btn.style.background = '';
+          btn.classList.remove('filled');
+        }
+      });
+
+      // Restore checkboxes
+      if (project.showMask != null) { showMask = project.showMask; document.getElementById('showMask').checked = showMask; }
+      if (project.showGrid != null) { showGrid = project.showGrid; document.getElementById('showGrid').checked = showGrid; }
+
+      // Restore layers
+      layers = [];
+      selectedLayerId = null;
+      const layerData = project.layers || [];
+      if (!layerData.length) { updateUI(); render(); return; }
+
+      let loaded = 0;
+      layerData.forEach(d => {
+        if (!d.imgSrc) { loaded++; return; }
+        const img = new Image();
+        img.onload = () => {
+          layers.push({
+            id: d.id,
+            name: d.name || 'Layer',
+            visible: d.visible !== false,
+            opacity: d.opacity != null ? d.opacity : 1,
+            x: d.x || 0,
+            y: d.y || 0,
+            scale: d.scale || 1,
+            rotation: d.rotation || 0,
+            flipH: !!d.flipH,
+            flipV: !!d.flipV,
+            img,
+          });
+          loaded++;
+          if (loaded === layerData.length) {
+            // Sort by original order (id)
+            layers.sort((a, b) => {
+              const ai = layerData.findIndex(ld => ld.id === a.id);
+              const bi = layerData.findIndex(ld => ld.id === b.id);
+              return ai - bi;
+            });
+            nextId = Math.max(...layers.map(l => l.id)) + 1;
+            if (layers.length) selectedLayerId = layers[layers.length - 1].id;
+            updateUI();
+            render();
+          }
+        };
+        img.onerror = () => {
+          loaded++;
+          if (loaded === layerData.length) { updateUI(); render(); }
+        };
+        img.src = d.imgSrc;
+      });
+    } catch (err) {
+      alert('Failed to load project: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('btnSaveProject').onclick = saveProject;
+document.getElementById('btnLoadProject').onclick = () => document.getElementById('projectFileInput').click();
+document.getElementById('projectFileInput').onchange = e => {
+  if (e.target.files[0]) loadProject(e.target.files[0]);
+  e.target.value = '';
+};
+
+// ═══════════════════════════════════════════════════════════
+// LOAD IMAGE AS LAYER
+// ═══════════════════════════════════════════════════════════
+document.getElementById('btnLoadImage').onclick = () => document.getElementById('imageLoadInput').click();
+document.getElementById('imageLoadInput').onchange = e => {
+  const files = e.target.files;
+  if (!files.length) return;
+  for (const f of files) {
+    if (!isImageFile(f)) continue;
+    const name = f.name.replace(/\.[^.]+$/, '');
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => addLayer(img, name);
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(f);
+  }
+  e.target.value = '';
+};
+
+// ═══════════════════════════════════════════════════════════
+// RESIZABLE ASSET BROWSER
+// ═══════════════════════════════════════════════════════════
+(function() {
+  const handle = document.getElementById('assetResizeHandle');
+  const browser = document.getElementById('assetBrowser');
+  let isResizing = false;
+  let startY = 0;
+  let startH = 0;
+
+  handle.addEventListener('mousedown', e => {
+    e.preventDefault();
+    isResizing = true;
+    startY = e.clientY;
+    startH = browser.offsetHeight || 180;
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!isResizing) return;
+    const delta = e.clientY - startY;
+    const newH = Math.max(80, Math.min(window.innerHeight * 0.7, startH + delta));
+    browser.style.maxHeight = newH + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+  });
+})();
+
+// Initial render
+render();
+</script>
+</body>
+</html>
