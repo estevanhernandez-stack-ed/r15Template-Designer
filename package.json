@@ -5,7 +5,8 @@
   "description": "Roblox R15 Shirt Editor / Template Designer",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder --win"
   },
   "keywords": [
     "roblox",
@@ -15,7 +16,20 @@
   ],
   "author": "Conundrum by Este",
   "license": "ISC",
+  "build": {
+    "appId": "com.conundrum.r15",
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
   "devDependencies": {
-    "electron": "^41.1.0"
+    "electron": "^41.1.0",
+    "electron-builder": "^26.8.1"
   }
 }

@@ -12,21 +12,26 @@ Also known as "Conundrum by Este" - A robust, full-featured Roblox R15 Shirt vis
 ### Prerequisites
 - Node.js installed
 
-### Setup App
-To use this as a standalone desktop application:
-1. Clone the repository and enter the directory:
+### Quick Install (Windows)
+If you want to install this on another Windows PC:
+1. Install [Node.js](https://nodejs.org/).
+2. Open a terminal and clone the repository:
    ```bash
    git clone https://github.com/estevanhernandez-stack-ed/r15Template-Designer.git
    cd r15Template-Designer
    ```
-
-2. Install dependencies:
+3. Install dependencies and build the Windows installer:
    ```bash
    npm install
+   npm run build
    ```
+4. Navigate to the `dist/` folder and double click `R15 Template Designer Setup 1.0.0.exe` to install the app.
+**(Alternatively, you can just take the `dist/R15 Template Designer Setup 1.0.0.exe` file and copy it to a USB drive to install directly on another computer without needing to compile it!)**
 
-3. Launch the application:
+### Development Mode
+To just run it without installing:
    ```bash
+   npm install
    npm start
    ```
 
